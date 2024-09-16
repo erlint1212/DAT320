@@ -1,0 +1,45 @@
+---
+title: "DAT320: Compulsory assignment Y"
+author: "Group Y"
+date: "`r Sys.Date()`"
+output:
+  pdf_document
+---
+
+# Exercise 1
+
+## Task 1
+
+The following code block serves as example on writing R markdown documents.
+
+```{r ex1_task1}
+# loading necessary packages
+library(ggplot2)
+
+d = data.frame(time = 1:100, param = (1:100)^2) # defining a data.frame d
+ggplot(d, aes(x = time, y = param)) + # a simple plot
+  geom_line() + 
+  geom_point()
+```
+
+Don't forget to provide explanations with your results.
+
+## Task 2
+
+You may reuse variables and packages you have defined in earlier code blocks:
+
+```{r ex1_task2}
+str(d)
+```
+
+# Exercise 2
+
+## Task 1
+
+You may use LaTeX notation within R markdown as well:
+
+$$ \text{acf}(.) = \text{cor}(x_t, B^k(x_t)) $$
+
+# Literature
+
+More information about R markdown can be found here: <http://www.rmarkdown.com>
