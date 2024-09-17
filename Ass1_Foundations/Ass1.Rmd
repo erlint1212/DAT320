@@ -41,9 +41,11 @@ gapminder %>%
 ```{r E1_d}
 gapminder %>%
   group_by(continent, year) %>%
-  summarise(Mean_lifeExp= mean(lifeExp, na.rm=T)) %>%
+  summarise(Mean_lifeExp= mean(lifeExp, na.rm = T), .groups = 'drop') %>%
   ggplot(aes(x=year, y=Mean_lifeExp)) +
-  geom_ribbon(aes(ymin= Mean_lifeExp - sd(Mean_lifeExp), ymax = Mean_lifeExp + sd(Mean_lifeExp)), fill = "grey70") +
+  geom_ribbon(aes(ymin= Mean_lifeExp - 1, ymax = Mean_lifeExp + 1), fill = "grey70") +
   geom_line() +
-  facet_grid(.~continent)
+  facet_grid(.~continent) +
+  theme(axis.text.x = element_text(angle=90)) +
+  ylim(0, NA)
 ```
