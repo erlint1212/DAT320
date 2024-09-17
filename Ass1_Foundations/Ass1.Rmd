@@ -26,6 +26,7 @@ summary(gapminder)
 ``` {r E1_b}
 gapminder %>%
   ggplot(aes(x=year, y=lifeExp, colour=continent)) +
+    #geom_bar(position='dodge', stat='identity')
     geom_line()
 ```
 
@@ -48,4 +49,14 @@ gapminder %>%
   facet_grid(.~continent) +
   theme(axis.text.x = element_text(angle=90)) +
   ylim(0, NA)
+```
+
+## Excercise 2 - Elementary data analysis and model training
+
+### (a)
+```{r E2_a}
+weatherHistory <- read.csv("weatherHistory.csv")
+head(weatherHistory)
+weatherHistory %>%
+  ggplot(aes(x=Formatted.Date, y=Temperature..C.))
 ```
