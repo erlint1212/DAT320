@@ -19,6 +19,7 @@ require("dplyr")
 ### (a)
 ```{r E1_a}
 gapminder <- read.csv("gapminder.csv")
+
 summary(gapminder)
 ```
 
@@ -32,10 +33,11 @@ gapminder %>%
 
 ### (c)
 ```{r E1_c}
-gapminder %>%
+knitr::kable(gapminder %>%
   group_by(continent, year) %>%
   summarise_at(vars(lifeExp), list(Min = min, Med = median, Mean = mean, Max = max, Sd = sd)) %>%
   data.frame()
+)
 ```
 
 ### (d)
@@ -54,9 +56,116 @@ gapminder %>%
 ## Excercise 2 - Elementary data analysis and model training
 
 ### (a)
-```{r E2_a}
-#weatherHistory <- read.csv("weatherHistory.csv")
-#head(weatherHistory)
-#weatherHistory %>%
-#  ggplot(aes(x=Formatted.Date, y=Temperature..C.))
+```{r E2_a_1}
+weatherHistory <- read.csv("weatherHistory.csv")
+head(weatherHistory)
 ```
+**Qualitative nominal**
+
+* Summary
+* Precip.Type
+* Daily.Summary
+
+**Quantitative Continuous:**
+
+* Temperature..C.
+* Apparent.Temperature..C.
+* Humidity
+* Wind.Speed..km.h.
+* Visibility..km.
+* Wind.Bearing..degrees (Reason: Not ranked)
+
+**Quantitative Discrete:**
+
+* Formatted.Date
+* Loud.Cover
+
+#### Qualitative nominal
+``` {r E2_a_2}
+weatherHistory %>%
+  group_by(Precip.Type) %>%
+  summarize(Count = n()) %>%
+  ggplot(aes(x=Precip.Type, y=Count)) +
+  geom_bar(stat='identity', position='dodge')
+```
+
+
+``` {r E2_a_3}
+weatherHistory %>%
+  group_by(Summary) %>%
+  summarize(Count = n()) %>%
+  ggplot(aes(x=Summary, y=Count)) +
+  geom_bar(stat='identity', position='dodge') +
+  theme(axis.text.x = element_text(angle=90))
+```
+``` {r E2_a_4}
+weatherHistory %>%
+  group_by(Daily.Summary) %>%
+  summarize(Count = n()) %>%
+  ggplot(aes(x=Daily.Summary, y=Count)) +
+  geom_bar(stat='identity', position='dodge')
+```
+
+
+#### Discrete nominal
+```{r E2_a_5}
+weatherHistory %>%
+  ggplot(aes(Temperature..C.)) +
+  geom_histogram(aes(y = ..density..), fill = "white", color="black") +
+  stat_density(kernel = "gaussian", fill = NA, colour = "black")
+```
+
+
+```{r E2_a_6}
+weatherHistory %>%
+  ggplot(aes(Apparent.Temperature..C.)) +
+  geom_histogram(aes(y = ..density..), fill = "white", color="black") +
+  stat_density(kernel = "gaussian", fill = NA, colour = "black")
+```
+
+
+```{r E2_a_7}
+weatherHistory %>%
+  ggplot(aes(Humidity)) +
+  geom_histogram(aes(y = ..density..), fill = "white", color="black") +
+  stat_density(kernel = "gaussian", fill = NA, colour = "black")
+```
+```{r E2_a_8}
+weatherHistory %>%
+  ggplot(aes(Wind.Speed..km.h.)) +
+  geom_histogram(aes(y = ..density..), fill = "white", color="black") +
+  stat_density(kernel = "gaussian", fill = NA, colour = "black")
+```
+```{r E2_a_9}
+weatherHistory %>%
+  ggplot(aes(Visibility..km.)) +
+  geom_histogram(aes(y = ..density..), fill = "white", color="black") +
+  stat_density(kernel = "gaussian", fill = NA, colour = "black")
+```
+
+``` {r E2_a_11}
+
+# weatherHistory %>%
+#   group_by(Wind.Bearing..degrees.) %>%
+#   summarize(Count = n()) %>%
+#   ggplot(aes(x=Wind.Bearing..degrees., y=Count)) +
+#   geom_bar(stat='identity', position='dodge') +
+#   theme(axis.text.x = element_text(angle=90))
+
+weatherHistory %>%
+  ggplot(aes(Wind.Bearing..degrees.)) +
+  geom_histogram(aes(y = ..density..), fill = "white", color="black") +
+  stat_density(kernel = "gaussian", fill = NA, colour = "black")
+```
+
+#### Quantative discrete
+```{r E2_a_10}
+weatherHistory %>%
+  group_by(Loud.Cover) %>%
+  summarize(Count = n()) %>%
+  ggplot(aes(x=Loud.Cover, y=Count)) +
+  geom_bar(stat='identity', position='dodge') +
+  theme(axis.text.x = element_text(angle=90))
+```
+
+### (b)
