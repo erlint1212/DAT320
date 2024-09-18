@@ -9,7 +9,7 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-options(contrasts = c("contr.sum", "contr.poly"))
+#options(contrasts = c("contr.sum", "contr.poly"))
 require("ggplot2")
 require("dplyr")
 ```
@@ -33,10 +33,11 @@ gapminder %>%
 
 ### (c)
 ```{r E1_c}
-knitr::kable(gapminder %>%
-  group_by(continent, year) %>%
-  summarise_at(vars(lifeExp), list(Min = min, Med = median, Mean = mean, Max = max, Sd = sd)) %>%
-  data.frame()
+knitr::kable(
+  gapminder %>%
+    group_by(continent, year) %>%
+    summarise_at(vars(lifeExp), list(Min = min, Med = median, Mean = mean, Max = max, Sd = sd)) %>%
+    data.frame()
 )
 ```
 
@@ -169,3 +170,42 @@ weatherHistory %>%
 ```
 
 ### (b)
+First removing all columns that seem irrelevant, reasoning:
+
+* Formatted.Date : When encoded it will be equal to row label (1, 2, 3, ...) which tells nothing
+* Loud.Cover : All values are 0, therfore tells nothing
+* Daily.Summary : Too big to onehotencode effectivly
+
+Then remove all rows with NA, do this after removing irrelevant columns so data is not lost to having NA in the removed columns
+```{r E2_b_1}
+library(caret)
+library(tidyr)
+library(dplyr)
+weatherHistory <- weatherHistory %>% select(-c("Formatted.Date", "Daily.Summary", "Loud.Cover"))
+weatherHistory <- na.omit(weatherHistory) # Remove all NA
+head(weatherHistory)
+```
+
+``` {r E2_b_2}
+
+num_wH <- weatherHistory %>%
+  select(-c("Summary", "Precip.Type")) 
+num_stand_wH <- as.data.frame(sapply(num_wH, function(x) ((x-mean(x))/sd(x))))
+
+qualitative_wH <- weatherHistory %>%
+  select(c("Summary", "Precip.Type")) #Omitted "Formatted.Date","Daily.Summary"
+
+# PT <- factor(qualitative_wH$Precip.Type)
+# PT <- as.data.frame(model.matrix(~ Precip.Type - 1, PT))
+# 
+# FD <- factor(qualitative_wH$Summary)
+# FD <- as.data.frame(model.matrix(~ f - Summary - 1, FD))
+
+
+#head(merge(PT, FD))
+
+#oh_weatherHistory <- dummyVars("~ .", data = qualitative_wH)
+#oh_weatherHistory <- data.frame(predict(oh_weatherHistory, newdata = qualitative_wH))
+#head(num_stand_wH)
+head(oh_weatherHistory)
+```
