@@ -1,0 +1,62 @@
+---
+title: "Assignment 1"
+author: 
+- Erling Tennøy Nordtvedt 
+- Oleg Karpov
+date: "2024-09-16"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(contrasts = c("contr.sum", "contr.poly"))
+require("ggplot2")
+require("dplyr")
+```
+
+## Excercise 1 - R syntax & data structures
+
+### (a)
+```{r E1_a}
+gapminder <- read.csv("gapminder.csv")
+summary(gapminder)
+```
+
+### (b)
+``` {r E1_b}
+gapminder %>%
+  ggplot(aes(x=year, y=lifeExp, colour=continent)) +
+    #geom_bar(position='dodge', stat='identity')
+    geom_line()
+```
+
+### (c)
+```{r E1_c}
+gapminder %>%
+  group_by(continent, year) %>%
+  summarise_at(vars(lifeExp), list(Min = min, Med = median, Mean = mean, Max = max, Sd = sd)) %>%
+  data.frame()
+```
+
+### (d)
+```{r E1_d}
+gapminder %>%
+  group_by(continent, year) %>%
+  summarise(Mean_lifeExp= mean(lifeExp, na.rm = T), .groups = 'drop') %>%
+  ggplot(aes(x=year, y=Mean_lifeExp)) +
+  geom_ribbon(aes(ymin= Mean_lifeExp - 1, ymax = Mean_lifeExp + 1), fill = "grey70") +
+  geom_line() +
+  facet_grid(.~continent) +
+  theme(axis.text.x = element_text(angle=90)) +
+  ylim(0, NA)
+```
+
+## Excercise 2 - Elementary data analysis and model training
+
+### (a)
+```{r E2_a}
+#weatherHistory <- read.csv("weatherHistory.csv")
+#head(weatherHistory)
+#weatherHistory %>%
+#  ggplot(aes(x=Formatted.Date, y=Temperature..C.))
+```
