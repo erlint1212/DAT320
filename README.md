@@ -5,3 +5,5 @@
 ## TODO
 
 * Look over task 1, especially task 1 d and see if it is done correctly according to instructions
+
+* i think i have done it ^^^ *
