@@ -55,8 +55,8 @@ gapminder %>%
 
 ### (a)
 ```{r E2_a}
-weatherHistory <- read.csv("weatherHistory.csv")
-head(weatherHistory)
-weatherHistory %>%
-  ggplot(aes(x=Formatted.Date, y=Temperature..C.))
+#weatherHistory <- read.csv("weatherHistory.csv")
+#head(weatherHistory)
+#weatherHistory %>%
+#  ggplot(aes(x=Formatted.Date, y=Temperature..C.))
 ```
