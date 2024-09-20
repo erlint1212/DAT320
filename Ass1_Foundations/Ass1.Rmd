@@ -14,7 +14,7 @@ require("ggplot2")
 require("dplyr")
 ```
 
-## Excercise 1 - R syntax & data structures
+## Exercise 1 - R syntax & data structures
 
 ### (a)
 ```{r E1_a}
@@ -54,7 +54,7 @@ gapminder %>%
   ylim(0, NA)
 ```
 
-## Excercise 2 - Elementary data analysis and model training
+## Exercise 2 - Elementary data analysis and model training
 
 ### (a)
 ```{r E2_a_1}
@@ -201,11 +201,46 @@ qualitative_wH <- weatherHistory %>%
 # FD <- factor(qualitative_wH$Summary)
 # FD <- as.data.frame(model.matrix(~ f - Summary - 1, FD))
 
-
+q1 <- table(1:nrow(weatherHistory), weatherHistory$Precip.Type) # as.data.frame.matrix(
+q2 <- table(1:nrow(weatherHistory), weatherHistory$Summary)
+q <- as.data.frame.matrix(cbind(q1, q2))
 #head(merge(PT, FD))
 
 #oh_weatherHistory <- dummyVars("~ .", data = qualitative_wH)
 #oh_weatherHistory <- data.frame(predict(oh_weatherHistory, newdata = qualitative_wH))
 #head(num_stand_wH)
-head(oh_weatherHistory)
+cleaned_wH <- cbind(num_stand_wH, q)
+head(cleaned_wH)
+
+sample <- sample(c(T, F), nrow(cleaned_wH), replace=T, prob=c(0.75, 0.25))
+test_wH <- cleaned_wH[!sample,]
+train_wH <- cleaned_wH[sample,]
 ```
+### (c)
+Reason for choosen variables:
+
+* Tempratrue (C) : Baseline that gets moved
+* Humidity : Feels a lot hotter when its more humid, harder to sweat
+* Wind speed : Wind makes skin feel colder
+* Pressure : Pressure changes based on if it may rain or not, feels different
+* Rain/Snow : If it rains the air feels colder
+
+```{r E2_c_1}
+wH_mod <- train_wH %>%
+  lm(Apparent.Temperature..C. ~ rain + snow + Pressure..millibars. + Humidity + Temperature..C. + Wind.Speed..km.h., .)
+
+summary.aov(wH_mod)
+summary(wH_mod)
+```
+#### RMSE
+
+$$ \text{RMSE}(y, \hat{y}) = \sqrt{\frac{\sum_{i=0}^{N - 1} (y_i - \hat{y}_i)^2}{N}} $$
+```{r E2_c_2}
+
+```
+
+
+## Exercise 3 - Linear Regression and Diagnostic Plots
+
+
+## Exercise 4 - correlation and partial correlation
