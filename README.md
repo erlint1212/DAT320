@@ -8,7 +8,8 @@ Everyone do all the tasks individually, then we make presentation together later
 
 * Ex 1 [x]
 * Ex 2 [x]
-* Ex 3 [x]
+* Ex 3 [ ]
+    - d [ ]
 * Ex 4 [ ]
     - a [ ]
     - b [ ]
