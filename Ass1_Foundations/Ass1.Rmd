@@ -273,5 +273,122 @@ R2_train
 
 ## Exercise 3 - Linear Regression and Diagnostic Plots
 
+### (a)
+
+#### a) Linearity
+
+If a function is linear, then all factors increase at a consistent rate for each step.
+Gradient and all partial first order derivatives will be a function of constants
+Linear function: $y(x,z) = 2x + 4z + 5xz + 10$
+Non-Linear function: $y(x,z) = 2x^2 + 5z^5$
+
+#### b) Homoscedasticity 
+
+homogeneity of variance assumes that all observations are picked from a sources that have equal variance.
+In other words the data points around a linear model should vary equally from the line, if there are any cone shape or other such irregularities this assumption is broken and the model that will be produced will eb flawed.
+
+#### c) Independence
+
+Observations can't depend on each other, in other words if you pick one observation from a population for your sample, this should not affect the next sample you choose. In other words no observations should depend or affect each other.
+
+By the very nature of lm, it is **assumed** that you have a i.i.d dataset. This has to be done in the sampeling stage, not the cleaning stage.
+
+#### d) Normaility
+
+Assumes that the data follows a normal distribution.
+
+Can be tested by making a Q-Q plot and seeing how well the data points follows  the line.
+If the right tail is very heavy, you probably should log the value
+slightly heavy tails can still be used because of the law of large numbers.
+
+
+### (b)
+
+These are all diagnostic plots that allow us to test our assumptions
+
+#### Residuals vs Fitted
+To test for the assumption of linearity
+```{r E3_b_1}
+plot(wH_lm,1)
+```
+
+#### Normal Q-Q
+To test for normality of residuals
+```{r E3_b_2}
+plot(wH_lm,2)
+```
+
+#### Scale-Location (or Spread-Location)
+To test for homoscadescity (equality of variance)
+```{r E3_b_3}
+plot(wH_lm,3)
+```
+
+#### Residuals vs Leverage
+Allows us to identify influential observations
+**Leverage:** extent to which the coefficients in the regression model would change if a particular observations was removed from the dataset (outliers).
+**Standarized residuals:** standardized difference between a predicted value for an observation and the actual value of the observation.
+```{r E3_b_4}
+plot(wH_lm,5)
+```
+
+### (c)
+```{r E2_c_setup}
+set.seed(42)
+
+n <- 1000
+x <- 1:n
+
+# Changeable parameters
+# - Change the parameters to affect the generated data points below.
+# - You may copy this code multiple times to answer all the questions in the exercise.
+# - You may find it reasonable to argue for multiple violations from a single generated set of data points.
+
+contant <- 0
+trend <- 0
+curve_magnitue <- 0
+curve_period <- 100
+curve_shift <- 0
+normal_noise_magnitue <- 1
+norm_noise_periode <- 10000
+shift_norm_noise <- 500
+non_normal_noise_magnitue <- 0
+non_norm_noice_periode <- 10000
+shift_non_norm_noise <- 500
+
+y.gen <- contant +
+  trend * x + 
+  curve_magnitue* sin(
+    (x/curve_period + curve_shift)*pi
+    ) + 
+  normal_noise_magnitue*cos(
+    (x/norm_noise_periode + shift_norm_noise/norm_noise_periode)*pi
+    )*rnorm(n, sd = 3) +
+  non_normal_noise_magnitue*cos(
+    (x/non_norm_noice_periode + shift_non_norm_noise/non_norm_noice_periode)*pi
+    ) * rexp(n, rate = 0.2) 
+
+p <- qplot(x, y.gen, ylab = "y") +
+  geom_point(size = 0.1) +
+  labs(title = "Data generate for linear regrestion")
+
+# Display the plot
+print(p)
+```
+```{r E2_c_plots}
+lm.gen <- lm(y.gen ~ x)
+plot(lm.gen, which = 1)
+plot(lm.gen, which = 2)
+plot(lm.gen, which = 3)
+plot(lm.gen, which = 5)
+```
+```
+
+#### Holds all the assumptions
+
+#### Breaks the assumption of Homoscedastiicty
+
+#### Breaks the assumption of Linearity
+
 
 ## Exercise 4 - correlation and partial correlation
