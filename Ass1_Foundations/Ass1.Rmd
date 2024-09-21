@@ -9,21 +9,21 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-#options(contrasts = c("contr.sum", "contr.poly"))
+options(contrasts = c("contr.sum", "contr.poly"))
 require("ggplot2")
 require("dplyr")
 ```
 
-## Exercise 1 - R syntax & data structures
+# Exercise 1 - R syntax & data structures
 
-### (a)
+## (a)
 ```{r E1_a}
 gapminder <- read.csv("gapminder.csv")
 
 summary(gapminder)
 ```
 
-### (b)
+## (b)
 ``` {r E1_b}
 gapminder %>%
   ggplot(aes(x=year, y=lifeExp, colour=continent)) +
@@ -31,7 +31,7 @@ gapminder %>%
     geom_line()
 ```
 
-### (c)
+## (c)
 ```{r E1_c}
 knitr::kable(
   gapminder %>%
@@ -41,7 +41,7 @@ knitr::kable(
 )
 ```
 
-### (d)
+## (d)
 ```{r E1_d}
 gapminder %>%
   group_by(continent, year) %>%
@@ -54,9 +54,9 @@ gapminder %>%
   ylim(0, NA)
 ```
 
-## Exercise 2 - Elementary data analysis and model training
+# Exercise 2 - Elementary data analysis and model training
 
-### (a)
+## (a)
 ```{r E2_a_1}
 weatherHistory <- read.csv("weatherHistory.csv")
 head(weatherHistory)
@@ -81,7 +81,7 @@ head(weatherHistory)
 * Formatted.Date
 * Loud.Cover
 
-#### Qualitative nominal
+### Qualitative nominal
 ``` {r E2_a_2}
 weatherHistory %>%
   group_by(Precip.Type) %>%
@@ -108,7 +108,7 @@ weatherHistory %>%
 ```
 
 
-#### Discrete nominal
+### Discrete nominal
 ```{r E2_a_5}
 weatherHistory %>%
   ggplot(aes(Temperature..C.)) +
@@ -159,7 +159,7 @@ weatherHistory %>%
   stat_density(kernel = "gaussian", fill = NA, colour = "black")
 ```
 
-#### Quantative discrete
+### Quantative discrete
 ```{r E2_a_10}
 weatherHistory %>%
   group_by(Loud.Cover) %>%
@@ -169,7 +169,7 @@ weatherHistory %>%
   theme(axis.text.x = element_text(angle=90))
 ```
 
-### (b)
+## (b)
 First removing all columns that seem irrelevant, reasoning:
 
 * Formatted.Date : When encoded it will be equal to row label (1, 2, 3, ...) which tells nothing
@@ -216,7 +216,7 @@ sample <- sample(c(T, F), nrow(cleaned_wH), replace=T, prob=c(0.75, 0.25))
 test_wH <- cleaned_wH[!sample,]
 train_wH <- cleaned_wH[sample,]
 ```
-### (c)
+## (c)
 Reason for choosen variables:
 
 * Tempratrue (C) : Baseline that gets moved
@@ -240,7 +240,7 @@ y_train_true <- train_wH$Apparent.Temperature..C.
 y_train_pred <- predict(wH_lm, newdata = train_wH)
 ```
 
-#### RMSE
+### RMSE
 
 $$ \text{RMSE}(y, \hat{y}) = \sqrt{\frac{\sum_{i=0}^{N - 1} (y_i - \hat{y}_i)^2}{N}} $$
 ```{r E2_c_2}
@@ -250,7 +250,7 @@ rmse_test
 rmse_test
 
 ```
-#### MAE
+### MAE
 $$ \text{MAE}(x,y) = \sum_{i=1}^{D}|x_i-y_i|  $$
 ```{r E2_c_3}
 mae_test <- MAE(y_test_pred, y_test_true)
@@ -259,7 +259,7 @@ mae_test
 mae_train
 ```
 
-#### $\text{R}^{2}$ score (coefficient of determination)
+### $\text{R}^{2}$ score (coefficient of determination)
 $$ 
 R^2 = 1 - \frac{\text{SSR (sum of square regression)}}{\text{SST (total sum of squares)}} 
 = 1 - \frac{\sum_{i=0}^{N - 1} (y_i - \hat{y}_i)^2}{\sum_{i=0}^{N - 1} (y_i - \hat{y})^2}
@@ -271,29 +271,29 @@ R2_test
 R2_train
 ```
 
-## Exercise 3 - Linear Regression and Diagnostic Plots
+# Exercise 3 - Linear Regression and Diagnostic Plots
 
-### (a)
+## (a)
 
-#### a) Linearity
+### a) Linearity
 
 If a function is linear, then all factors increase at a consistent rate for each step.
 Gradient and all partial first order derivatives will be a function of constants
 Linear function: $y(x,z) = 2x + 4z + 5xz + 10$
 Non-Linear function: $y(x,z) = 2x^2 + 5z^5$
 
-#### b) Homoscedasticity 
+### b) Homoscedasticity 
 
 homogeneity of variance assumes that all observations are picked from a sources that have equal variance.
 In other words the data points around a linear model should vary equally from the line, if there are any cone shape or other such irregularities this assumption is broken and the model that will be produced will eb flawed.
 
-#### c) Independence
+### c) Independence
 
 Observations can't depend on each other, in other words if you pick one observation from a population for your sample, this should not affect the next sample you choose. In other words no observations should depend or affect each other.
 
 By the very nature of lm, it is **assumed** that you have a i.i.d dataset. This has to be done in the sampeling stage, not the cleaning stage.
 
-#### d) Normaility
+### d) Normaility
 
 Assumes that the data follows a normal distribution.
 
@@ -302,29 +302,29 @@ If the right tail is very heavy, you probably should log the value
 slightly heavy tails can still be used because of the law of large numbers.
 
 
-### (b)
+## (b)
 
 These are all diagnostic plots that allow us to test our assumptions
 
-#### Residuals vs Fitted
+### Residuals vs Fitted
 To test for the assumption of linearity
 ```{r E3_b_1}
 plot(wH_lm,1)
 ```
 
-#### Normal Q-Q
+### Normal Q-Q
 To test for normality of residuals
 ```{r E3_b_2}
 plot(wH_lm,2)
 ```
 
-#### Scale-Location (or Spread-Location)
+### Scale-Location (or Spread-Location)
 To test for homoscadescity (equality of variance)
 ```{r E3_b_3}
 plot(wH_lm,3)
 ```
 
-#### Residuals vs Leverage
+### Residuals vs Leverage
 Allows us to identify influential observations
 **Leverage:** extent to which the coefficients in the regression model would change if a particular observations was removed from the dataset (outliers).
 **Standarized residuals:** standardized difference between a predicted value for an observation and the actual value of the observation.
@@ -332,63 +332,85 @@ Allows us to identify influential observations
 plot(wH_lm,5)
 ```
 
-### (c)
-```{r E2_c_setup}
-set.seed(42)
-
-n <- 1000
-x <- 1:n
-
-# Changeable parameters
-# - Change the parameters to affect the generated data points below.
-# - You may copy this code multiple times to answer all the questions in the exercise.
-# - You may find it reasonable to argue for multiple violations from a single generated set of data points.
-
-contant <- 0
-trend <- 0
-curve_magnitue <- 0
-curve_period <- 100
-curve_shift <- 0
-normal_noise_magnitue <- 1
-norm_noise_periode <- 10000
-shift_norm_noise <- 500
-non_normal_noise_magnitue <- 0
-non_norm_noice_periode <- 10000
-shift_non_norm_noise <- 500
-
-y.gen <- contant +
-  trend * x + 
-  curve_magnitue* sin(
-    (x/curve_period + curve_shift)*pi
-    ) + 
-  normal_noise_magnitue*cos(
-    (x/norm_noise_periode + shift_norm_noise/norm_noise_periode)*pi
-    )*rnorm(n, sd = 3) +
-  non_normal_noise_magnitue*cos(
-    (x/non_norm_noice_periode + shift_non_norm_noise/non_norm_noice_periode)*pi
-    ) * rexp(n, rate = 0.2) 
-
-p <- qplot(x, y.gen, ylab = "y") +
-  geom_point(size = 0.1) +
-  labs(title = "Data generate for linear regrestion")
-
-# Display the plot
-print(p)
+## (c)
+```{r E3_c_setup}
+data_gen <- function(c=0, t=0, cm=0, cp=100, cs=0, nnm=1, nnp=10000, snn=500, nnnm=0, nnnp=10000, snnn=500) {
+  set.seed(42)
+  
+  n <- 1000
+  x <- 1:n
+  
+  # Changeable parameters
+  # - Change the parameters to affect the generated data points below.
+  # - You may copy this code multiple times to answer all the questions in the exercise.
+  # - You may find it reasonable to argue for multiple violations from a single generated set of data points.
+  
+  contant <- c 
+  trend <- t
+  curve_magnitue <- cm
+  curve_period <- cp
+  curve_shift <- cs
+  normal_noise_magnitue <- nnm
+  norm_noise_periode <- nnp
+  shift_norm_noise <- snn
+  non_normal_noise_magnitue <- nnnm
+  non_norm_noice_periode <- nnnp
+  shift_non_norm_noise <- snnn
+  
+  y.gen <- contant +
+    trend * x + 
+    curve_magnitue* sin(
+      (x/curve_period + curve_shift)*pi
+      ) + 
+    normal_noise_magnitue*cos(
+      (x/norm_noise_periode + shift_norm_noise/norm_noise_periode)*pi
+      )*rnorm(n, sd = 3) +
+    non_normal_noise_magnitue*cos(
+      (x/non_norm_noice_periode + shift_non_norm_noise/non_norm_noice_periode)*pi
+      ) * rexp(n, rate = 0.2) 
+  
+  p <- qplot(x, y.gen, ylab = "y") +
+    geom_point(size = 0.1) +
+    labs(title = "Data generate for linear regrestion")
+  
+  # Display the plot
+  print(p)
+  return(list("x"=x,"y.gen"=y.gen))
+}
 ```
-```{r E2_c_plots}
-lm.gen <- lm(y.gen ~ x)
+
+### Holds all the assumptions
+
+```{r E3_c_plots}
+gen_data <- data_gen()
+lm.gen <- lm(gen_data$y.gen ~ gen_data$x)
 plot(lm.gen, which = 1)
 plot(lm.gen, which = 2)
 plot(lm.gen, which = 3)
 plot(lm.gen, which = 5)
 ```
+
+### Breaks the assumption of Homoscedastiicty
+
+```{r E3_c_bHomoscedastiicty}
+gen_data <- data_gen(nnnm = -10000, snnn = 5000, nnnp = 50000)
+lm.gen <- lm(gen_data$y.gen ~ gen_data$x)
+plot(lm.gen, which = 2)
 ```
 
-#### Holds all the assumptions
+### Breaks the assumption of Linearity
 
-#### Breaks the assumption of Homoscedastiicty
+```{r E3_c_bLinear}
+gen_data <- data_gen(nnnm = -10000, snnn = 5000, cs=10000, cm = 10000, snn = 10000)
+lm.gen <- lm(gen_data$y.gen ~ (gen_data$x)^4)
+plot(lm.gen, 1)
+```
 
-#### Breaks the assumption of Linearity
+### Breaks the assumption of Normality.
+```{r E3_c_bNorm}
+gen_data <- data_gen(nnnm = 10000, snnn = 5000, cs=10000, cm = 10000, snn = 10000, nnm = 0, nnnp = 5000, t = 1)
+lm.gen <- lm(gen_data$y.gen ~ gen_data$x)
+plot(lm.gen, 5)
+```
 
-
-## Exercise 4 - correlation and partial correlation
+# Exercise 4 - correlation and partial correlation

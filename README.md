@@ -8,11 +8,12 @@ Everyone do all the tasks individually, then we make presentation together later
 
 * Ex 1 [x]
 * Ex 2 [x]
-* Ex 3 [ ]
-    - a [x]
-    - b [x]
-    - c [\\]
+* Ex 3 [x]
 * Ex 4 [ ]
+    - a [ ]
+    - b [ ]
+    - c [ ]
+    - d [ ]
 
 ## Notes
 
@@ -23,8 +24,9 @@ Everyone do all the tasks individually, then we make presentation together later
 * Task E2_c justification for hypothesis tests very weak, write better later
 * Task E3_a independence, no way to test? Has to assume it has been done in the sampling stage?
 * E3 donse sloppely overall, look through later
+* E3 c badly done, fix later
 
 
 ## Deadlines
 
-* 21.10, 15:00 Done with exercises, start presentation
+* 21.10, 17:00 Done with exercises, start presentation
