@@ -7,12 +7,11 @@ Everyone do all the tasks individually, then we make presentation together later
 ## TODO
 
 * Ex 1 [x]
-* Ex 2
-    - a [x]
-    - b [x]
-    - c [\]
-    - d [ ]
+* Ex 2 [x]
 * Ex 3 [ ]
+    - a [\\]
+    - b [ ]
+    - c [ ]
 * Ex 4 [ ]
 
 ## Notes
@@ -21,6 +20,7 @@ Everyone do all the tasks individually, then we make presentation together later
 * Task E2_a_5 smoothing operation to see ca avg looks bad, fix later
 * Wind_Bearing Degrees quantative nominal or ordinal? I think nominal for now, even though they are all whole numbers
 * Task E2_b_2 done slopply, has to be a better way to do this, removed many variables, not sure if allowed, check later
+* Task E2_c justification for hypothesis tests very weak, write better later
 
 
 ## Deadlines

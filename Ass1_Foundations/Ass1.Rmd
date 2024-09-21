@@ -226,19 +226,50 @@ Reason for choosen variables:
 * Rain/Snow : If it rains the air feels colder
 
 ```{r E2_c_1}
-wH_mod <- train_wH %>%
+wH_lm <- train_wH %>%
   lm(Apparent.Temperature..C. ~ rain + snow + Pressure..millibars. + Humidity + Temperature..C. + Wind.Speed..km.h., .)
 
-summary.aov(wH_mod)
-summary(wH_mod)
+summary.aov(wH_lm)
+summary(wH_lm)
 ```
+As can be seen an the ANOVA and t test for the different values, they are all significant within $\alpha \approx 0$ which means that there is almost 0 chance that the factors are due to random chance. (FIX LATER, DOUBBLE CHECK)
+```{r E2_2_vals}
+y_test_true <- test_wH$Apparent.Temperature..C.
+y_test_pred <- predict(wH_lm, newdata = test_wH)
+y_train_true <- train_wH$Apparent.Temperature..C.
+y_train_pred <- predict(wH_lm, newdata = train_wH)
+```
+
 #### RMSE
 
 $$ \text{RMSE}(y, \hat{y}) = \sqrt{\frac{\sum_{i=0}^{N - 1} (y_i - \hat{y}_i)^2}{N}} $$
 ```{r E2_c_2}
+rmse_test <- RMSE(y_test_pred, y_test_true)
+rmse_train <- RMSE(y_train_pred, y_train_true)
+rmse_test
+rmse_test
 
 ```
+#### MAE
+$$ \text{MAE}(x,y) = \sum_{i=1}^{D}|x_i-y_i|  $$
+```{r E2_c_3}
+mae_test <- MAE(y_test_pred, y_test_true)
+mae_train <- MAE(y_train_pred, y_train_true)
+mae_test
+mae_train
+```
 
+#### $\text{R}^{2}$ score (coefficient of determination)
+$$ 
+R^2 = 1 - \frac{\text{SSR (sum of square regression)}}{\text{SST (total sum of squares)}} 
+= 1 - \frac{\sum_{i=0}^{N - 1} (y_i - \hat{y}_i)^2}{\sum_{i=0}^{N - 1} (y_i - \hat{y})^2}
+$$
+```{r E2_c_4}
+R2_test <- R2(y_test_pred, y_test_true)
+R2_train <- R2(y_train_pred, y_train_true)
+R2_test
+R2_train
+```
 
 ## Exercise 3 - Linear Regression and Diagnostic Plots
 
