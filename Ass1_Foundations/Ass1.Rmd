@@ -410,7 +410,72 @@ plot(lm.gen, 1)
 ```{r E3_c_bNorm}
 gen_data <- data_gen(nnnm = 10000, snnn = 5000, cs=10000, cm = 10000, snn = 10000, nnm = 0, nnnp = 5000, t = 1)
 lm.gen <- lm(gen_data$y.gen ~ gen_data$x)
-plot(lm.gen, 5)
+plot(lm.gen, 2)
 ```
 
+## (d)
+
+### Breaks Homoscedasticity
+
+The error distibution is not consistent, aka $$ \epsilon_i \ne \sigma^2 $$ instead it is
+$$ \sigma_{i}^2 = x_{i} \sigma^2 $$, in other words heteroscedastic.
+
+If plot X against Y you will see a cone shape instead of expected line, clearly there are different distributions of variances based on X
+
+### Breaks Linearity
+
+The Residual vs Fitted shows a clear cone as well as a clear non-linear pattern between X and Y
+
+### Breaks Normality
+
+The Q-Q Normal plot clearly shows high bias towards the tails
+
+
 # Exercise 4 - correlation and partial correlation
+
+## (a)
+
+**Correlation:** Degree to which a pair of variables/factors are linearly related. As in the increase in one variable either increases or decreases another. Correlation does not imply causation, even if Smoking and higher life expectancy is higher in one area, that doesn't automatically imply that smoking is healthy.
+
+Higher variance decreases correlation, while higher covariance increases it. In other words the more the two variables/factors trend and the less variance from that trend they have the more correlated the two varaibles/factors are.
+
+## (b)
+
+**Partial correlation:** measures the degree of association between two random variables, with the effect of a set of controlling random variables removed. [Wiki](https://en.wikipedia.org/wiki/Partial_correlation)
+Helps to understand the relationship between two variables, controlling for the effect of one or more additional variables.
+
+The formula describes the correlation between the residuals $e_X$ and $e_Y$ resulting from the linear regression of X with Z and of Y with Z, respectively.
+
+### Scenarios
+
+1. You suspect there are inter dependencies between sow weight, food eaten and hormones in food
+2. You suspect there are inter dependencies between distance ran, speed per km and water drunk.
+3. You suspect there are inter dependencies between rain, pressure and latitude coordinates
+
+
+## (c)
+
+No clue
+
+## (d)
+
+```{r E4_setup}
+weatherHistory <- read.csv("weatherHistory.csv")
+select_wH <- weatherHistory %>% select(Temperature..C., Apparent.Temperature..C., Humidity)
+```
+
+```{r E4_pairwise}
+pairwise_corr <- select_wH %>%
+  cor() %>%
+  data.frame()
+pairwise_corr
+rownames(pairwise_corr)
+pairwise_corr["Temperature..C.", "Temperature..C."]
+```
+
+```{r E4_partialCorr}
+#partial_corr <- funcion(X, Y, Z, corrMat) {
+#  p_XY <- corrMat[X, Y]
+#}
+  
+```
