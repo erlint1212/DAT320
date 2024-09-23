@@ -3,6 +3,7 @@ title: "Assignment 1"
 author: 
 - Erling Tennøy Nordtvedt 
 - Oleg Karpov
+- Qeis Khaled Qeis
 date: "2024-09-16"
 output: pdf_document
 ---
@@ -10,6 +11,8 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 options(contrasts = c("contr.sum", "contr.poly"))
+```
+```{r imports}
 require("ggplot2")
 require("dplyr")
 ```
