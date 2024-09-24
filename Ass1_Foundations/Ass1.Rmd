@@ -12,9 +12,12 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 options(contrasts = c("contr.sum", "contr.poly"))
 ```
-```{r imports}
+```{r imports, results='hide'}
 require("ggplot2")
 require("dplyr")
+require("ppcor")
+require("caret")
+require("tidyr")
 ```
 
 # Exercise 1 - R syntax & data structures
@@ -29,7 +32,8 @@ summary(gapminder)
 ## (b)
 ``` {r E1_b}
 gapminder %>%
-  ggplot(aes(x=year, y=lifeExp, colour=continent)) +
+  group_by(country) %>%
+  ggplot(aes(x=year, y=lifeExp, gorup=country,  colour=continent)) +
     #geom_bar(position='dodge', stat='identity')
     geom_line()
 ```
@@ -48,9 +52,9 @@ knitr::kable(
 ```{r E1_d}
 gapminder %>%
   group_by(continent, year) %>%
-  summarise(Mean_lifeExp= mean(lifeExp, na.rm = T), .groups = 'drop') %>%
+  summarise(Mean_lifeExp=mean(lifeExp, na.rm = T), SD_lifeExp=sd(lifeExp, na.rm = T), .groups = "drop") %>%
   ggplot(aes(x=year, y=Mean_lifeExp)) +
-  geom_ribbon(aes(ymin= Mean_lifeExp - 1, ymax = Mean_lifeExp + 1), fill = "grey70") +
+  geom_ribbon(aes(ymin= Mean_lifeExp - SD_lifeExp, ymax = Mean_lifeExp + SD_lifeExp), fill = "grey70") +
   geom_line() +
   facet_grid(.~continent) +
   theme(axis.text.x = element_text(angle=90)) +
@@ -181,22 +185,19 @@ First removing all columns that seem irrelevant, reasoning:
 
 Then remove all rows with NA, do this after removing irrelevant columns so data is not lost to having NA in the removed columns
 ```{r E2_b_1}
-library(caret)
-library(tidyr)
-library(dplyr)
-weatherHistory <- weatherHistory %>% select(-c("Formatted.Date", "Daily.Summary", "Loud.Cover"))
-weatherHistory <- na.omit(weatherHistory) # Remove all NA
-head(weatherHistory)
+drop_weatherHistory <- weatherHistory %>% dplyr::select(-c("Formatted.Date", "Daily.Summary", "Loud.Cover"))
+drop_weatherHistory <- na.omit(drop_weatherHistory) # Remove all NA
+head(drop_weatherHistory)
 ```
 
 ``` {r E2_b_2}
 
-num_wH <- weatherHistory %>%
-  select(-c("Summary", "Precip.Type")) 
+num_wH <- drop_weatherHistory %>%
+  dplyr::select(-c("Summary", "Precip.Type")) 
 num_stand_wH <- as.data.frame(sapply(num_wH, function(x) ((x-mean(x))/sd(x))))
 
-qualitative_wH <- weatherHistory %>%
-  select(c("Summary", "Precip.Type")) #Omitted "Formatted.Date","Daily.Summary"
+qualitative_wH <- drop_weatherHistory %>%
+  dplyr::select(c("Summary", "Precip.Type")) #Omitted "Formatted.Date","Daily.Summary"
 
 # PT <- factor(qualitative_wH$Precip.Type)
 # PT <- as.data.frame(model.matrix(~ Precip.Type - 1, PT))
@@ -204,13 +205,13 @@ qualitative_wH <- weatherHistory %>%
 # FD <- factor(qualitative_wH$Summary)
 # FD <- as.data.frame(model.matrix(~ f - Summary - 1, FD))
 
-q1 <- table(1:nrow(weatherHistory), weatherHistory$Precip.Type) # as.data.frame.matrix(
-q2 <- table(1:nrow(weatherHistory), weatherHistory$Summary)
+q1 <- table(1:nrow(drop_weatherHistory), drop_weatherHistory$Precip.Type) # as.data.frame.matrix(
+q2 <- table(1:nrow(drop_weatherHistory), drop_weatherHistory$Summary)
 q <- as.data.frame.matrix(cbind(q1, q2))
 #head(merge(PT, FD))
 
-#oh_weatherHistory <- dummyVars("~ .", data = qualitative_wH)
-#oh_weatherHistory <- data.frame(predict(oh_weatherHistory, newdata = qualitative_wH))
+#oh_drop_weatherHistory <- dummyVars("~ .", data = qualitative_wH)
+#oh_drop_weatherHistory <- data.frame(predict(oh_drop_weatherHistory, newdata = qualitative_wH))
 #head(num_stand_wH)
 cleaned_wH <- cbind(num_stand_wH, q)
 head(cleaned_wH)
@@ -451,9 +452,9 @@ The formula describes the correlation between the residuals $e_X$ and $e_Y$ resu
 
 ### Scenarios
 
-1. You suspect there are inter dependencies between sow weight, food eaten and hormones in food
-2. You suspect there are inter dependencies between distance ran, speed per km and water drunk.
-3. You suspect there are inter dependencies between rain, pressure and latitude coordinates
+1. You suspect there are inter dependencies between X=sow weight, Y=food eaten and Z=hormones in food
+2. You suspect there are inter dependencies between X=distance ran, Y=speed per km and Z=water drunk.
+3. You suspect there are inter dependencies between X=rain, Y=pressure and Z=latitude coordinates
 
 
 ## (c)
@@ -464,7 +465,7 @@ No clue
 
 ```{r E4_setup}
 weatherHistory <- read.csv("weatherHistory.csv")
-select_wH <- weatherHistory %>% select(Temperature..C., Apparent.Temperature..C., Humidity)
+select_wH <- weatherHistory %>% dplyr::select(Temperature..C., Apparent.Temperature..C., Humidity)
 ```
 
 ```{r E4_pairwise}
@@ -472,13 +473,18 @@ pairwise_corr <- select_wH %>%
   cor() %>%
   data.frame()
 pairwise_corr
-rownames(pairwise_corr)
-pairwise_corr["Temperature..C.", "Temperature..C."]
 ```
 
 ```{r E4_partialCorr}
 #partial_corr <- funcion(X, Y, Z, corrMat) {
 #  p_XY <- corrMat[X, Y]
 #}
-  
+part_corr <- select_wH %>%
+  pcor()
+
+part_corr
 ```
+
+* Apparent.Temperature..C. and Temperature..C. has a partial correlation value of ca 0.99 which implies that they are highly consistent with each other and increase with each other. Very low difference between pairwise to partial where they are equal if rounded to nearest 2 decimal, which implies that Z=Humidity has very little effect on them.
+* Humidity and Temperature..C. has a low partial correlation value of -0.35 which implies that they are not consistent with each other and decreases when the other increases. Decreases from -0.63 to -0.35 which implies that Z=Apparent.Temperature.C.. is affecting them. Z is a significant confounder.
+* Humidity and Apparent.Temperature..C. has a low partial correlation value of 0.27 which implies that they are not consistent with each other and increase with each other. Dropped from pairwise correlation -0.60 to 0.27 which implies that Z=Temperature..C. is significantly affecting them. Z is a significant cofunder.
