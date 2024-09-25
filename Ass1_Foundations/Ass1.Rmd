@@ -1,37 +1,40 @@
 ---
-title: "Assignment 1"
-author: 
-- Erling Tennøy Nordtvedt 
-- Oleg Karpov
+title: "DAT320: Compulsory assignment 1"
+author: "Group 4"
 date: "2024-09-16"
 output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+```
+```{r imports, results='hide', message=FALSE}
 options(contrasts = c("contr.sum", "contr.poly"))
 require("ggplot2")
 require("dplyr")
+require("ppcor")
+require("caret")
+require("tidyr")
 ```
 
 # Exercise 1 - R syntax & data structures
 
-## (a)
+## Task a
 ```{r E1_a}
 gapminder <- read.csv("gapminder.csv")
 
 summary(gapminder)
 ```
 
-## (b)
+## Task b
 ``` {r E1_b}
 gapminder %>%
-  ggplot(aes(x=year, y=lifeExp, colour=continent)) +
-    #geom_bar(position='dodge', stat='identity')
+  group_by(country) %>%
+  ggplot(aes(x=year, y=lifeExp, gorup=country,  colour=continent)) +
     geom_line()
 ```
 
-## (c)
+## Task c
 ```{r E1_c}
 knitr::kable(
   gapminder %>%
@@ -41,13 +44,13 @@ knitr::kable(
 )
 ```
 
-## (d)
+## Task d
 ```{r E1_d}
 gapminder %>%
   group_by(continent, year) %>%
-  summarise(Mean_lifeExp= mean(lifeExp, na.rm = T), .groups = 'drop') %>%
+  summarise(Mean_lifeExp=mean(lifeExp, na.rm = T), SD_lifeExp=sd(lifeExp, na.rm = T), .groups = "drop") %>%
   ggplot(aes(x=year, y=Mean_lifeExp)) +
-  geom_ribbon(aes(ymin= Mean_lifeExp - 1, ymax = Mean_lifeExp + 1), fill = "grey70") +
+  geom_ribbon(aes(ymin= Mean_lifeExp - SD_lifeExp, ymax = Mean_lifeExp + SD_lifeExp), fill = "grey70") +
   geom_line() +
   facet_grid(.~continent) +
   theme(axis.text.x = element_text(angle=90)) +
@@ -56,7 +59,7 @@ gapminder %>%
 
 # Exercise 2 - Elementary data analysis and model training
 
-## (a)
+## Task a
 ```{r E2_a_1}
 weatherHistory <- read.csv("weatherHistory.csv")
 head(weatherHistory)
@@ -145,14 +148,6 @@ weatherHistory %>%
 ```
 
 ``` {r E2_a_11}
-
-# weatherHistory %>%
-#   group_by(Wind.Bearing..degrees.) %>%
-#   summarize(Count = n()) %>%
-#   ggplot(aes(x=Wind.Bearing..degrees., y=Count)) +
-#   geom_bar(stat='identity', position='dodge') +
-#   theme(axis.text.x = element_text(angle=90))
-
 weatherHistory %>%
   ggplot(aes(Wind.Bearing..degrees.)) +
   geom_histogram(aes(y = ..density..), fill = "white", color="black") +
@@ -169,7 +164,7 @@ weatherHistory %>%
   theme(axis.text.x = element_text(angle=90))
 ```
 
-## (b)
+## Task b
 First removing all columns that seem irrelevant, reasoning:
 
 * Formatted.Date : When encoded it will be equal to row label (1, 2, 3, ...) which tells nothing
@@ -178,37 +173,24 @@ First removing all columns that seem irrelevant, reasoning:
 
 Then remove all rows with NA, do this after removing irrelevant columns so data is not lost to having NA in the removed columns
 ```{r E2_b_1}
-library(caret)
-library(tidyr)
-library(dplyr)
-weatherHistory <- weatherHistory %>% select(-c("Formatted.Date", "Daily.Summary", "Loud.Cover"))
-weatherHistory <- na.omit(weatherHistory) # Remove all NA
-head(weatherHistory)
+drop_weatherHistory <- weatherHistory %>% dplyr::select(-c("Formatted.Date", "Daily.Summary", "Loud.Cover"))
+drop_weatherHistory <- na.omit(drop_weatherHistory) # Remove all NA
+head(drop_weatherHistory)
 ```
 
 ``` {r E2_b_2}
 
-num_wH <- weatherHistory %>%
-  select(-c("Summary", "Precip.Type")) 
+num_wH <- drop_weatherHistory %>%
+  dplyr::select(-c("Summary", "Precip.Type")) 
 num_stand_wH <- as.data.frame(sapply(num_wH, function(x) ((x-mean(x))/sd(x))))
 
-qualitative_wH <- weatherHistory %>%
-  select(c("Summary", "Precip.Type")) #Omitted "Formatted.Date","Daily.Summary"
+qualitative_wH <- drop_weatherHistory %>%
+  dplyr::select(c("Summary", "Precip.Type")) #Omitted "Formatted.Date","Daily.Summary"
 
-# PT <- factor(qualitative_wH$Precip.Type)
-# PT <- as.data.frame(model.matrix(~ Precip.Type - 1, PT))
-# 
-# FD <- factor(qualitative_wH$Summary)
-# FD <- as.data.frame(model.matrix(~ f - Summary - 1, FD))
-
-q1 <- table(1:nrow(weatherHistory), weatherHistory$Precip.Type) # as.data.frame.matrix(
-q2 <- table(1:nrow(weatherHistory), weatherHistory$Summary)
+q1 <- table(1:nrow(drop_weatherHistory), drop_weatherHistory$Precip.Type) # as.data.frame.matrix(
+q2 <- table(1:nrow(drop_weatherHistory), drop_weatherHistory$Summary)
 q <- as.data.frame.matrix(cbind(q1, q2))
-#head(merge(PT, FD))
 
-#oh_weatherHistory <- dummyVars("~ .", data = qualitative_wH)
-#oh_weatherHistory <- data.frame(predict(oh_weatherHistory, newdata = qualitative_wH))
-#head(num_stand_wH)
 cleaned_wH <- cbind(num_stand_wH, q)
 head(cleaned_wH)
 
@@ -216,10 +198,10 @@ sample <- sample(c(T, F), nrow(cleaned_wH), replace=T, prob=c(0.75, 0.25))
 test_wH <- cleaned_wH[!sample,]
 train_wH <- cleaned_wH[sample,]
 ```
-## (c)
-Reason for choosen variables:
+## Task c
+Reason for chosen variables:
 
-* Tempratrue (C) : Baseline that gets moved
+* Temperate (C) : Baseline that gets moved
 * Humidity : Feels a lot hotter when its more humid, harder to sweat
 * Wind speed : Wind makes skin feel colder
 * Pressure : Pressure changes based on if it may rain or not, feels different
@@ -273,7 +255,7 @@ R2_train
 
 # Exercise 3 - Linear Regression and Diagnostic Plots
 
-## (a)
+## Task a
 
 ### a) Linearity
 
@@ -302,7 +284,7 @@ If the right tail is very heavy, you probably should log the value
 slightly heavy tails can still be used because of the law of large numbers.
 
 
-## (b)
+## Task b
 
 These are all diagnostic plots that allow us to test our assumptions
 
@@ -332,7 +314,7 @@ Allows us to identify influential observations
 plot(wH_lm,5)
 ```
 
-## (c)
+## Task c
 ```{r E3_c_setup}
 data_gen <- function(c=0, t=0, cm=0, cp=100, cs=0, nnm=1, nnp=10000, snn=500, nnnm=0, nnnp=10000, snnn=500) {
   set.seed(42)
@@ -413,7 +395,7 @@ lm.gen <- lm(gen_data$y.gen ~ gen_data$x)
 plot(lm.gen, 2)
 ```
 
-## (d)
+## Task d
 
 ### Breaks Homoscedasticity
 
@@ -433,13 +415,13 @@ The Q-Q Normal plot clearly shows high bias towards the tails
 
 # Exercise 4 - correlation and partial correlation
 
-## (a)
+## Task a
 
 **Correlation:** Degree to which a pair of variables/factors are linearly related. As in the increase in one variable either increases or decreases another. Correlation does not imply causation, even if Smoking and higher life expectancy is higher in one area, that doesn't automatically imply that smoking is healthy.
 
 Higher variance decreases correlation, while higher covariance increases it. In other words the more the two variables/factors trend and the less variance from that trend they have the more correlated the two varaibles/factors are.
 
-## (b)
+## Task b
 
 **Partial correlation:** measures the degree of association between two random variables, with the effect of a set of controlling random variables removed. [Wiki](https://en.wikipedia.org/wiki/Partial_correlation)
 Helps to understand the relationship between two variables, controlling for the effect of one or more additional variables.
@@ -448,20 +430,20 @@ The formula describes the correlation between the residuals $e_X$ and $e_Y$ resu
 
 ### Scenarios
 
-1. You suspect there are inter dependencies between sow weight, food eaten and hormones in food
-2. You suspect there are inter dependencies between distance ran, speed per km and water drunk.
-3. You suspect there are inter dependencies between rain, pressure and latitude coordinates
+1. You suspect there are inter dependencies between X=sow weight, Y=food eaten and Z=hormones in food
+2. You suspect there are inter dependencies between X=distance ran, Y=speed per km and Z=water drunk.
+3. You suspect there are inter dependencies between X=rain, Y=pressure and Z=latitude coordinates
 
 
-## (c)
+## Task c
 
 No clue
 
-## (d)
+## Task d
 
 ```{r E4_setup}
 weatherHistory <- read.csv("weatherHistory.csv")
-select_wH <- weatherHistory %>% select(Temperature..C., Apparent.Temperature..C., Humidity)
+select_wH <- weatherHistory %>% dplyr::select(Temperature..C., Apparent.Temperature..C., Humidity)
 ```
 
 ```{r E4_pairwise}
@@ -469,13 +451,15 @@ pairwise_corr <- select_wH %>%
   cor() %>%
   data.frame()
 pairwise_corr
-rownames(pairwise_corr)
-pairwise_corr["Temperature..C.", "Temperature..C."]
 ```
 
 ```{r E4_partialCorr}
-#partial_corr <- funcion(X, Y, Z, corrMat) {
-#  p_XY <- corrMat[X, Y]
-#}
-  
+part_corr <- select_wH %>%
+  pcor()
+
+part_corr
 ```
+
+* Apparent.Temperature..C. and Temperature..C. has a partial correlation value of ca 0.99 which implies that they are highly consistent with each other and increase with each other. Very low difference between pairwise to partial where they are equal if rounded to nearest 2 decimal, which implies that Z=Humidity has very little effect on them.
+* Humidity and Temperature..C. has a low partial correlation value of -0.35 which implies that they are not consistent with each other and decreases when the other increases. Decreases from -0.63 to -0.35 which implies that Z=Apparent.Temperature.C.. is affecting them. Z is a significant confounder.
+* Humidity and Apparent.Temperature..C. has a low partial correlation value of 0.27 which implies that they are not consistent with each other and increase with each other. Dropped from pairwise correlation -0.60 to 0.27 which implies that Z=Temperature..C. is significantly affecting them. Z is a significant cofunder.
