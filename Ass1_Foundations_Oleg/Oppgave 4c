@@ -1,3 +1,24 @@
 Oppgave 4c:
 Yes, the property of correlation regarding scaling holds for partial correlation as well.
-Just like regular correlation, partial correlation is not affected by scaling of the variables.
+Just like regular correlation, partial correlation is not affected by scaling of the variables, only the direction or sign can change.
+Let's do the math so see how this is the case:
+
+1.
+In the partial correlation formula we have:
+    Pxy
+    Pxz
+    Pyz
+
+2.
+if we then scale the x and y variables with a1 and a2 we get:
+    Pxy = sgn(a1,a2)*Pxy
+    Pxz = sgn(a1)*Pxz
+    Pyz = sgn(a2)*Pyz
+
+3.
+Then we substitute the coefficients with the scaled ones and obtain the formula:
+Pxy|z = (Pxy - Pxz*Pyz) / (sqrt(1-(Pxz)^2)*sqrt(1-(Pyz)^2) -> (sgn(a1,a2)*Pxy - sgn(a1)*Pxz*sgn(a2)*Pyz) / (sqrt(1-(sgn(a1)*Pxz)^2)*sqrt(1-(sgn(a2)*Pyz)^2)
+
+4.
+after doing the math and simplifying the formula we obtain sgn(a1,a2)*Pxy|z
+  
