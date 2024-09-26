@@ -259,6 +259,8 @@ R2_train
 
 ### a) Linearity
 
+The relationship between X and Y is linear.
+
 If a function is linear, then all factors increase at a consistent rate for each step.
 Gradient and all partial first order derivatives will be a function of constants
 Linear function: $y(x,z) = 2x + 4z + 5xz + 10$
@@ -266,16 +268,22 @@ Non-Linear function: $y(x,z) = 2x^2 + 5z^5$
 
 ### b) Homoscedasticity 
 
+Residuals have constant variance.
+
 homogeneity of variance assumes that all observations are picked from a sources that have equal variance.
 In other words the data points around a linear model should vary equally from the line, if there are any cone shape or other such irregularities this assumption is broken and the model that will be produced will eb flawed.
 
 ### c) Independence
+
+Residuals are independent.
 
 Observations can't depend on each other, in other words if you pick one observation from a population for your sample, this should not affect the next sample you choose. In other words no observations should depend or affect each other.
 
 By the very nature of lm, it is **assumed** that you have a i.i.d dataset. This has to be done in the sampeling stage, not the cleaning stage.
 
 ### d) Normaility
+
+Residuals are normally distributed.
 
 Assumes that the data follows a normal distribution.
 
@@ -289,19 +297,25 @@ slightly heavy tails can still be used because of the law of large numbers.
 These are all diagnostic plots that allow us to test our assumptions
 
 ### Residuals vs Fitted
-To test for the assumption of linearity
+
+A scatter plot where residuals are on the y-axis and fitted values are on the x-axis. Used to detect non-linearity, unequal error variances, and outliers.
 ```{r E3_b_1}
 plot(wH_lm,1)
 ```
 
 ### Normal Q-Q
+
+Points on the Normal Q-Q plot provide an indication of univariate normality of the dataset.
+If the data is normally distributed, the points will fall on the line, otherwise it implies that the assumption of Normality is broken.
 To test for normality of residuals
 ```{r E3_b_2}
 plot(wH_lm,2)
 ```
 
 ### Scale-Location (or Spread-Location)
-To test for homoscadescity (equality of variance)
+
+Simmilar to residuals vs fitted, but instead of using residuals on the y-axis it uses the square root of the residuals.
+Used to check for the assumption of homoscedascity. If the line is roughly horizontal and there is no clear pattern (like a cone) in the scatter plot then homoscedacity is lokely satisfied.
 ```{r E3_b_3}
 plot(wH_lm,3)
 ```
@@ -430,14 +444,36 @@ The formula describes the correlation between the residuals $e_X$ and $e_Y$ resu
 
 ### Scenarios
 
-1. You suspect there are inter dependencies between X=sow weight, Y=food eaten and Z=hormones in food
-2. You suspect there are inter dependencies between X=distance ran, Y=speed per km and Z=water drunk.
-3. You suspect there are inter dependencies between X=rain, Y=pressure and Z=latitude coordinates
+1. You suspect there are inter dependencies between X=Study hours per week, Y=Exam score and Z=IQ
+2. You suspect there are inter dependencies between X=Calories consumed, Y=Weight loss and Z=Hours of intense exercise.
+3. You suspect there are inter dependencies between X=Time spent on social media, Y=Self-esteem and Z=Age
 
 
 ## Task c
 
-No clue
+Yes, the property of correlation regarding scaling holds for partial correlation as well.
+Just like regular correlation, partial correlation is not affected by scaling of the variables, only the direction or sign can change.
+Let's do the math so see how this is the case:
+
+1.
+In the partial correlation formula we have:
+    Pxy
+    Pxz
+    Pyz
+
+2.
+if we then scale the x and y variables with a1 and a2 we get:
+    Pxy = sgn(a1,a2)*Pxy
+    Pxz = sgn(a1)*Pxz
+    Pyz = sgn(a2)*Pyz
+
+3.
+Then we substitute the coefficients with the scaled ones and obtain the formula:
+Pxy|z = (Pxy - Pxz*Pyz) / (sqrt(1-(Pxz)^2)*sqrt(1-(Pyz)^2) -> (sgn(a1,a2)*Pxy - sgn(a1)*Pxz*sgn(a2)*Pyz) / (sqrt(1-(sgn(a1)*Pxz)^2)*sqrt(1-(sgn(a2)*Pyz)^2)
+
+4.
+after doing the math and simplifying the formula we obtain sgn(a1,a2)*Pxy|z
+  
 
 ## Task d
 
