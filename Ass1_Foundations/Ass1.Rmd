@@ -432,6 +432,19 @@ The Q-Q Normal plot clearly shows high bias towards the tails
 ## Task a
 
 **Correlation:** Degree to which a pair of variables/factors are linearly related. As in the increase in one variable either increases or decreases another. Correlation does not imply causation, even if Smoking and higher life expectancy is higher in one area, that doesn't automatically imply that smoking is healthy.
+The correlation coefficient, typically denoted as ρ, ranges from -1 to 1:
+* A value of 1 indicates a perfect positive correlation,
+* A value of -1 indicates a perfect negative correlation,
+* A value of 0 indicates no correlation.
+
+**Effect of Scaling:**
+When variables are scaled by constants α1 and α2, the correlation is unaffected in magnitude but may change sign:
+ρW1W2 = cov(α1X, α2Y) / (sqrt(var(α1X)) * sqrt(var(α2Y)))
+This simplifies to:
+ρW1W2 = sgn(α1α2) * ρXY
+Thus, scaling does not change the inherent linear relationship but can alter its direction.
+
+
 
 Higher variance decreases correlation, while higher covariance increases it. In other words the more the two variables/factors trend and the less variance from that trend they have the more correlated the two varaibles/factors are.
 
