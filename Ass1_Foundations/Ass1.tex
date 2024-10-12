@@ -1,0 +1,1282 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={DAT320: Compulsory assignment 1},
+  pdfauthor={Group 4},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{DAT320: Compulsory assignment 1}
+\author{Group 4}
+\date{2024-09-16}
+
+\begin{document}
+\maketitle
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{options}\NormalTok{(}\AttributeTok{contrasts =} \FunctionTok{c}\NormalTok{(}\StringTok{"contr.sum"}\NormalTok{, }\StringTok{"contr.poly"}\NormalTok{))}
+\FunctionTok{require}\NormalTok{(}\StringTok{"ggplot2"}\NormalTok{)}
+\FunctionTok{require}\NormalTok{(}\StringTok{"dplyr"}\NormalTok{)}
+\FunctionTok{require}\NormalTok{(}\StringTok{"ppcor"}\NormalTok{)}
+\FunctionTok{require}\NormalTok{(}\StringTok{"caret"}\NormalTok{)}
+\FunctionTok{require}\NormalTok{(}\StringTok{"tidyr"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\section{Exercise 1 - R syntax \& data
+structures}\label{exercise-1---r-syntax-data-structures}
+
+\subsection{Task a}\label{task-a}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{gapminder }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"gapminder.csv"}\NormalTok{)}
+
+\FunctionTok{summary}\NormalTok{(gapminder)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##        X            country           continent              year     
+##  Min.   :   1.0   Length:1704        Length:1704        Min.   :1952  
+##  1st Qu.: 426.8   Class :character   Class :character   1st Qu.:1966  
+##  Median : 852.5   Mode  :character   Mode  :character   Median :1980  
+##  Mean   : 852.5                                         Mean   :1980  
+##  3rd Qu.:1278.2                                         3rd Qu.:1993  
+##  Max.   :1704.0                                         Max.   :2007  
+##     lifeExp           pop              gdpPercap       
+##  Min.   :23.60   Min.   :6.001e+04   Min.   :   241.2  
+##  1st Qu.:48.20   1st Qu.:2.794e+06   1st Qu.:  1202.1  
+##  Median :60.71   Median :7.024e+06   Median :  3531.8  
+##  Mean   :59.47   Mean   :2.960e+07   Mean   :  7215.3  
+##  3rd Qu.:70.85   3rd Qu.:1.959e+07   3rd Qu.:  9325.5  
+##  Max.   :82.60   Max.   :1.319e+09   Max.   :113523.1
+\end{verbatim}
+
+\subsection{Task b}\label{task-b}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{gapminder }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{group\_by}\NormalTok{(country) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{year, }\AttributeTok{y=}\NormalTok{lifeExp, }\AttributeTok{gorup=}\NormalTok{country,  }\AttributeTok{colour=}\NormalTok{continent)) }\SpecialCharTok{+}
+    \FunctionTok{geom\_line}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Ass1_files/figure-latex/E1_b-1.pdf}
+
+\subsection{Task c}\label{task-c}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{knitr}\SpecialCharTok{::}\FunctionTok{kable}\NormalTok{(}
+\NormalTok{  gapminder }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{group\_by}\NormalTok{(continent, year) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{summarise\_at}\NormalTok{(}\FunctionTok{vars}\NormalTok{(lifeExp), }\FunctionTok{list}\NormalTok{(}\AttributeTok{Min =}\NormalTok{ min, }\AttributeTok{Med =}\NormalTok{ median, }\AttributeTok{Mean =}\NormalTok{ mean, }\AttributeTok{Max =}\NormalTok{ max, }\AttributeTok{Sd =}\NormalTok{ sd)) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{data.frame}\NormalTok{()}
+\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{longtable}[]{@{}lrrrrrr@{}}
+\toprule\noalign{}
+continent & year & Min & Med & Mean & Max & Sd \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Africa & 1952 & 30.000 & 38.8330 & 39.13550 & 52.724 & 5.1515814 \\
+Africa & 1957 & 31.570 & 40.5925 & 41.26635 & 58.089 & 5.6201229 \\
+Africa & 1962 & 32.767 & 42.6305 & 43.31944 & 60.246 & 5.8753639 \\
+Africa & 1967 & 34.113 & 44.6985 & 45.33454 & 61.557 & 6.0826726 \\
+Africa & 1972 & 35.400 & 47.0315 & 47.45094 & 64.274 & 6.4162583 \\
+Africa & 1977 & 36.788 & 49.2725 & 49.58042 & 67.064 & 6.8081974 \\
+Africa & 1982 & 38.445 & 50.7560 & 51.59287 & 69.885 & 7.3759401 \\
+Africa & 1987 & 39.906 & 51.6395 & 53.34479 & 71.913 & 7.8640891 \\
+Africa & 1992 & 23.599 & 52.4290 & 53.62958 & 73.615 & 9.4610710 \\
+Africa & 1997 & 36.087 & 52.7590 & 53.59827 & 74.772 & 9.1033866 \\
+Africa & 2002 & 39.193 & 51.2355 & 53.32523 & 75.744 & 9.5864959 \\
+Africa & 2007 & 39.613 & 52.9265 & 54.80604 & 76.442 & 9.6307807 \\
+Americas & 1952 & 37.579 & 54.7450 & 53.27984 & 68.750 & 9.3260819 \\
+Americas & 1957 & 40.696 & 56.0740 & 55.96028 & 69.960 & 9.0331923 \\
+Americas & 1962 & 43.428 & 58.2990 & 58.39876 & 71.300 & 8.5035437 \\
+Americas & 1967 & 45.032 & 60.5230 & 60.41092 & 72.130 & 7.9091710 \\
+Americas & 1972 & 46.714 & 63.4410 & 62.39492 & 72.880 & 7.3230168 \\
+Americas & 1977 & 49.923 & 66.3530 & 64.39156 & 74.210 & 7.0694956 \\
+Americas & 1982 & 51.461 & 67.4050 & 66.22884 & 75.760 & 6.7208338 \\
+Americas & 1987 & 53.636 & 69.4980 & 68.09072 & 76.860 & 5.8019288 \\
+Americas & 1992 & 55.089 & 69.8620 & 69.56836 & 77.950 & 5.1671038 \\
+Americas & 1997 & 56.671 & 72.1460 & 71.15048 & 78.610 & 4.8875839 \\
+Americas & 2002 & 58.137 & 72.0470 & 72.42204 & 79.770 & 4.7997055 \\
+Americas & 2007 & 60.916 & 72.8990 & 73.60812 & 80.653 & 4.4409476 \\
+Asia & 1952 & 28.801 & 44.8690 & 46.31439 & 65.390 & 9.2917507 \\
+Asia & 1957 & 30.332 & 48.2840 & 49.31854 & 67.840 & 9.6354286 \\
+Asia & 1962 & 31.997 & 49.3250 & 51.56322 & 69.390 & 9.8206319 \\
+Asia & 1967 & 34.020 & 53.6550 & 54.66364 & 71.430 & 9.6509646 \\
+Asia & 1972 & 36.088 & 56.9500 & 57.31927 & 73.420 & 9.7227000 \\
+Asia & 1977 & 31.220 & 60.7650 & 59.61056 & 75.380 & 10.0221970 \\
+Asia & 1982 & 39.854 & 63.7390 & 62.61794 & 77.110 & 8.5352214 \\
+Asia & 1987 & 40.822 & 66.2950 & 64.85118 & 78.670 & 8.2037919 \\
+Asia & 1992 & 41.674 & 68.6900 & 66.53721 & 79.360 & 8.0755490 \\
+Asia & 1997 & 41.763 & 70.2650 & 68.02052 & 80.690 & 8.0911706 \\
+Asia & 2002 & 42.129 & 71.0280 & 69.23388 & 82.000 & 8.3745954 \\
+Asia & 2007 & 43.828 & 72.3960 & 70.72848 & 82.603 & 7.9637245 \\
+Europe & 1952 & 43.585 & 65.9000 & 64.40850 & 72.670 & 6.3610883 \\
+Europe & 1957 & 48.079 & 67.6500 & 66.70307 & 73.470 & 5.2958054 \\
+Europe & 1962 & 52.098 & 69.5250 & 68.53923 & 73.680 & 4.3024996 \\
+Europe & 1967 & 54.336 & 70.6100 & 69.73760 & 74.160 & 3.7997285 \\
+Europe & 1972 & 57.005 & 70.8850 & 70.77503 & 74.720 & 3.2405764 \\
+Europe & 1977 & 59.507 & 72.3350 & 71.93777 & 76.110 & 3.1210300 \\
+Europe & 1982 & 61.036 & 73.4900 & 72.80640 & 76.990 & 3.2182603 \\
+Europe & 1987 & 63.108 & 74.8150 & 73.64217 & 77.410 & 3.1696803 \\
+Europe & 1992 & 66.146 & 75.4510 & 74.44010 & 78.770 & 3.2097811 \\
+Europe & 1997 & 68.835 & 76.1160 & 75.50517 & 79.390 & 3.1046766 \\
+Europe & 2002 & 70.845 & 77.5365 & 76.70060 & 80.620 & 2.9221796 \\
+Europe & 2007 & 71.777 & 78.6085 & 77.64860 & 81.757 & 2.9798127 \\
+Oceania & 1952 & 69.120 & 69.2550 & 69.25500 & 69.390 & 0.1909188 \\
+Oceania & 1957 & 70.260 & 70.2950 & 70.29500 & 70.330 & 0.0494975 \\
+Oceania & 1962 & 70.930 & 71.0850 & 71.08500 & 71.240 & 0.2192031 \\
+Oceania & 1967 & 71.100 & 71.3100 & 71.31000 & 71.520 & 0.2969848 \\
+Oceania & 1972 & 71.890 & 71.9100 & 71.91000 & 71.930 & 0.0282843 \\
+Oceania & 1977 & 72.220 & 72.8550 & 72.85500 & 73.490 & 0.8980256 \\
+Oceania & 1982 & 73.840 & 74.2900 & 74.29000 & 74.740 & 0.6363961 \\
+Oceania & 1987 & 74.320 & 75.3200 & 75.32000 & 76.320 & 1.4142136 \\
+Oceania & 1992 & 76.330 & 76.9450 & 76.94500 & 77.560 & 0.8697413 \\
+Oceania & 1997 & 77.550 & 78.1900 & 78.19000 & 78.830 & 0.9050967 \\
+Oceania & 2002 & 79.110 & 79.7400 & 79.74000 & 80.370 & 0.8909545 \\
+Oceania & 2007 & 80.204 & 80.7195 & 80.71950 & 81.235 & 0.7290271 \\
+\end{longtable}
+
+\subsection{Task d}\label{task-d}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{gapminder }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{group\_by}\NormalTok{(continent, year) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{summarise}\NormalTok{(}\AttributeTok{Mean\_lifeExp=}\FunctionTok{mean}\NormalTok{(lifeExp, }\AttributeTok{na.rm =}\NormalTok{ T), }\AttributeTok{SD\_lifeExp=}\FunctionTok{sd}\NormalTok{(lifeExp, }\AttributeTok{na.rm =}\NormalTok{ T), }\AttributeTok{.groups =} \StringTok{"drop"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{year, }\AttributeTok{y=}\NormalTok{Mean\_lifeExp)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_ribbon}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{ymin=}\NormalTok{ Mean\_lifeExp }\SpecialCharTok{{-}}\NormalTok{ SD\_lifeExp, }\AttributeTok{ymax =}\NormalTok{ Mean\_lifeExp }\SpecialCharTok{+}\NormalTok{ SD\_lifeExp), }\AttributeTok{fill =} \StringTok{"grey70"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_line}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{facet\_grid}\NormalTok{(.}\SpecialCharTok{\textasciitilde{}}\NormalTok{continent) }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}\AttributeTok{axis.text.x =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{angle=}\DecValTok{90}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{ylim}\NormalTok{(}\DecValTok{0}\NormalTok{, }\ConstantTok{NA}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Ass1_files/figure-latex/E1_d-1.pdf}
+
+\section{Exercise 2 - Elementary data analysis and model
+training}\label{exercise-2---elementary-data-analysis-and-model-training}
+
+\subsection{Task a}\label{task-a-1}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{weatherHistory }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"weatherHistory.csv"}\NormalTok{)}
+\FunctionTok{head}\NormalTok{(weatherHistory)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##                  Formatted.Date       Summary Precip.Type Temperature..C.
+## 1 2006-04-01 00:00:00.000 +0200 Partly Cloudy        rain        9.472222
+## 2 2006-04-01 01:00:00.000 +0200 Partly Cloudy        rain        9.355556
+## 3 2006-04-01 02:00:00.000 +0200 Mostly Cloudy        rain        9.377778
+## 4 2006-04-01 03:00:00.000 +0200 Partly Cloudy        rain        8.288889
+## 5 2006-04-01 04:00:00.000 +0200 Mostly Cloudy        rain        8.755556
+## 6 2006-04-01 05:00:00.000 +0200 Partly Cloudy        rain        9.222222
+##   Apparent.Temperature..C. Humidity Wind.Speed..km.h. Wind.Bearing..degrees.
+## 1                 7.388889     0.89           14.1197                    251
+## 2                 7.227778     0.86           14.2646                    259
+## 3                 9.377778     0.89            3.9284                    204
+## 4                 5.944444     0.83           14.1036                    269
+## 5                 6.977778     0.83           11.0446                    259
+## 6                 7.111111     0.85           13.9587                    258
+##   Visibility..km. Loud.Cover Pressure..millibars.
+## 1         15.8263          0              1015.13
+## 2         15.8263          0              1015.63
+## 3         14.9569          0              1015.94
+## 4         15.8263          0              1016.41
+## 5         15.8263          0              1016.51
+## 6         14.9569          0              1016.66
+##                       Daily.Summary
+## 1 Partly cloudy throughout the day.
+## 2 Partly cloudy throughout the day.
+## 3 Partly cloudy throughout the day.
+## 4 Partly cloudy throughout the day.
+## 5 Partly cloudy throughout the day.
+## 6 Partly cloudy throughout the day.
+\end{verbatim}
+
+\textbf{Qualitative nominal}
+
+\begin{itemize}
+\tightlist
+\item
+  Summary
+\item
+  Precip.Type
+\item
+  Daily.Summary
+\end{itemize}
+
+\textbf{Quantitative Continuous:}
+
+\begin{itemize}
+\tightlist
+\item
+  Temperature..C.
+\item
+  Apparent.Temperature..C.
+\item
+  Humidity
+\item
+  Wind.Speed..km.h.
+\item
+  Visibility..km.
+\item
+  Wind.Bearing..degrees (Reason: Not ranked)
+\end{itemize}
+
+\textbf{Quantitative Discrete:}
+
+\begin{itemize}
+\tightlist
+\item
+  Formatted.Date
+\item
+  Loud.Cover
+\end{itemize}
+
+\subsubsection{Qualitative nominal}\label{qualitative-nominal}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{weatherHistory }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{group\_by}\NormalTok{(Precip.Type) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{summarize}\NormalTok{(}\AttributeTok{Count =} \FunctionTok{n}\NormalTok{()) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{Precip.Type, }\AttributeTok{y=}\NormalTok{Count)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_bar}\NormalTok{(}\AttributeTok{stat=}\StringTok{\textquotesingle{}identity\textquotesingle{}}\NormalTok{, }\AttributeTok{position=}\StringTok{\textquotesingle{}dodge\textquotesingle{}}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Ass1_files/figure-latex/E2_a_2-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{weatherHistory }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{group\_by}\NormalTok{(Summary) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{summarize}\NormalTok{(}\AttributeTok{Count =} \FunctionTok{n}\NormalTok{()) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{Summary, }\AttributeTok{y=}\NormalTok{Count)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_bar}\NormalTok{(}\AttributeTok{stat=}\StringTok{\textquotesingle{}identity\textquotesingle{}}\NormalTok{, }\AttributeTok{position=}\StringTok{\textquotesingle{}dodge\textquotesingle{}}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}\AttributeTok{axis.text.x =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{angle=}\DecValTok{90}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Ass1_files/figure-latex/E2_a_3-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{weatherHistory }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{group\_by}\NormalTok{(Daily.Summary) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{summarize}\NormalTok{(}\AttributeTok{Count =} \FunctionTok{n}\NormalTok{()) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{Daily.Summary, }\AttributeTok{y=}\NormalTok{Count)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_bar}\NormalTok{(}\AttributeTok{stat=}\StringTok{\textquotesingle{}identity\textquotesingle{}}\NormalTok{, }\AttributeTok{position=}\StringTok{\textquotesingle{}dodge\textquotesingle{}}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Ass1_files/figure-latex/E2_a_4-1.pdf}
+
+\subsubsection{Discrete nominal}\label{discrete-nominal}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{weatherHistory }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(Temperature..C.)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_histogram}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{y =}\NormalTok{ ..density..), }\AttributeTok{fill =} \StringTok{"white"}\NormalTok{, }\AttributeTok{color=}\StringTok{"black"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{stat\_density}\NormalTok{(}\AttributeTok{kernel =} \StringTok{"gaussian"}\NormalTok{, }\AttributeTok{fill =} \ConstantTok{NA}\NormalTok{, }\AttributeTok{colour =} \StringTok{"black"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: The dot-dot notation (`..density..`) was deprecated in ggplot2 3.4.0.
+## i Please use `after_stat(density)` instead.
+## This warning is displayed once every 8 hours.
+## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+## generated.
+\end{verbatim}
+
+\begin{verbatim}
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+\end{verbatim}
+
+\includegraphics{Ass1_files/figure-latex/E2_a_5-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{weatherHistory }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(Apparent.Temperature..C.)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_histogram}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{y =}\NormalTok{ ..density..), }\AttributeTok{fill =} \StringTok{"white"}\NormalTok{, }\AttributeTok{color=}\StringTok{"black"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{stat\_density}\NormalTok{(}\AttributeTok{kernel =} \StringTok{"gaussian"}\NormalTok{, }\AttributeTok{fill =} \ConstantTok{NA}\NormalTok{, }\AttributeTok{colour =} \StringTok{"black"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+\end{verbatim}
+
+\includegraphics{Ass1_files/figure-latex/E2_a_6-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{weatherHistory }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(Humidity)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_histogram}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{y =}\NormalTok{ ..density..), }\AttributeTok{fill =} \StringTok{"white"}\NormalTok{, }\AttributeTok{color=}\StringTok{"black"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{stat\_density}\NormalTok{(}\AttributeTok{kernel =} \StringTok{"gaussian"}\NormalTok{, }\AttributeTok{fill =} \ConstantTok{NA}\NormalTok{, }\AttributeTok{colour =} \StringTok{"black"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+\end{verbatim}
+
+\includegraphics{Ass1_files/figure-latex/E2_a_7-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{weatherHistory }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(Wind.Speed..km.h.)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_histogram}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{y =}\NormalTok{ ..density..), }\AttributeTok{fill =} \StringTok{"white"}\NormalTok{, }\AttributeTok{color=}\StringTok{"black"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{stat\_density}\NormalTok{(}\AttributeTok{kernel =} \StringTok{"gaussian"}\NormalTok{, }\AttributeTok{fill =} \ConstantTok{NA}\NormalTok{, }\AttributeTok{colour =} \StringTok{"black"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+\end{verbatim}
+
+\includegraphics{Ass1_files/figure-latex/E2_a_8-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{weatherHistory }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(Visibility..km.)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_histogram}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{y =}\NormalTok{ ..density..), }\AttributeTok{fill =} \StringTok{"white"}\NormalTok{, }\AttributeTok{color=}\StringTok{"black"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{stat\_density}\NormalTok{(}\AttributeTok{kernel =} \StringTok{"gaussian"}\NormalTok{, }\AttributeTok{fill =} \ConstantTok{NA}\NormalTok{, }\AttributeTok{colour =} \StringTok{"black"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+\end{verbatim}
+
+\includegraphics{Ass1_files/figure-latex/E2_a_9-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{weatherHistory }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(Wind.Bearing..degrees.)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_histogram}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{y =}\NormalTok{ ..density..), }\AttributeTok{fill =} \StringTok{"white"}\NormalTok{, }\AttributeTok{color=}\StringTok{"black"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{stat\_density}\NormalTok{(}\AttributeTok{kernel =} \StringTok{"gaussian"}\NormalTok{, }\AttributeTok{fill =} \ConstantTok{NA}\NormalTok{, }\AttributeTok{colour =} \StringTok{"black"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+\end{verbatim}
+
+\includegraphics{Ass1_files/figure-latex/E2_a_11-1.pdf}
+
+\subsubsection{Quantative discrete}\label{quantative-discrete}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{weatherHistory }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{group\_by}\NormalTok{(Loud.Cover) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{summarize}\NormalTok{(}\AttributeTok{Count =} \FunctionTok{n}\NormalTok{()) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{Loud.Cover, }\AttributeTok{y=}\NormalTok{Count)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_bar}\NormalTok{(}\AttributeTok{stat=}\StringTok{\textquotesingle{}identity\textquotesingle{}}\NormalTok{, }\AttributeTok{position=}\StringTok{\textquotesingle{}dodge\textquotesingle{}}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}\AttributeTok{axis.text.x =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{angle=}\DecValTok{90}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Ass1_files/figure-latex/E2_a_10-1.pdf}
+
+\subsection{Task b}\label{task-b-1}
+
+First removing all columns that seem irrelevant, reasoning:
+
+\begin{itemize}
+\tightlist
+\item
+  Formatted.Date : When encoded it will be equal to row label (1, 2, 3,
+  \ldots) which tells nothing
+\item
+  Loud.Cover : All values are 0, therfore tells nothing
+\item
+  Daily.Summary : Too big to onehotencode effectivly
+\end{itemize}
+
+Then remove all rows with NA, do this after removing irrelevant columns
+so data is not lost to having NA in the removed columns
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{drop\_weatherHistory }\OtherTok{\textless{}{-}}\NormalTok{ weatherHistory }\SpecialCharTok{\%\textgreater{}\%}\NormalTok{ dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\FunctionTok{c}\NormalTok{(}\StringTok{"Formatted.Date"}\NormalTok{, }\StringTok{"Daily.Summary"}\NormalTok{, }\StringTok{"Loud.Cover"}\NormalTok{))}
+\NormalTok{drop\_weatherHistory }\OtherTok{\textless{}{-}} \FunctionTok{na.omit}\NormalTok{(drop\_weatherHistory) }\CommentTok{\# Remove all NA}
+\FunctionTok{head}\NormalTok{(drop\_weatherHistory)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##         Summary Precip.Type Temperature..C. Apparent.Temperature..C. Humidity
+## 1 Partly Cloudy        rain        9.472222                 7.388889     0.89
+## 2 Partly Cloudy        rain        9.355556                 7.227778     0.86
+## 3 Mostly Cloudy        rain        9.377778                 9.377778     0.89
+## 4 Partly Cloudy        rain        8.288889                 5.944444     0.83
+## 5 Mostly Cloudy        rain        8.755556                 6.977778     0.83
+## 6 Partly Cloudy        rain        9.222222                 7.111111     0.85
+##   Wind.Speed..km.h. Wind.Bearing..degrees. Visibility..km. Pressure..millibars.
+## 1           14.1197                    251         15.8263              1015.13
+## 2           14.2646                    259         15.8263              1015.63
+## 3            3.9284                    204         14.9569              1015.94
+## 4           14.1036                    269         15.8263              1016.41
+## 5           11.0446                    259         15.8263              1016.51
+## 6           13.9587                    258         14.9569              1016.66
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{num\_wH }\OtherTok{\textless{}{-}}\NormalTok{ drop\_weatherHistory }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\FunctionTok{c}\NormalTok{(}\StringTok{"Summary"}\NormalTok{, }\StringTok{"Precip.Type"}\NormalTok{)) }
+\NormalTok{num\_stand\_wH }\OtherTok{\textless{}{-}} \FunctionTok{as.data.frame}\NormalTok{(}\FunctionTok{sapply}\NormalTok{(num\_wH, }\ControlFlowTok{function}\NormalTok{(x) ((x}\SpecialCharTok{{-}}\FunctionTok{mean}\NormalTok{(x))}\SpecialCharTok{/}\FunctionTok{sd}\NormalTok{(x))))}
+
+\NormalTok{qualitative\_wH }\OtherTok{\textless{}{-}}\NormalTok{ drop\_weatherHistory }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\StringTok{"Summary"}\NormalTok{, }\StringTok{"Precip.Type"}\NormalTok{)) }\CommentTok{\#Omitted "Formatted.Date","Daily.Summary"}
+
+\NormalTok{q1 }\OtherTok{\textless{}{-}} \FunctionTok{table}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\FunctionTok{nrow}\NormalTok{(drop\_weatherHistory), drop\_weatherHistory}\SpecialCharTok{$}\NormalTok{Precip.Type) }\CommentTok{\# as.data.frame.matrix(}
+\NormalTok{q2 }\OtherTok{\textless{}{-}} \FunctionTok{table}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\FunctionTok{nrow}\NormalTok{(drop\_weatherHistory), drop\_weatherHistory}\SpecialCharTok{$}\NormalTok{Summary)}
+\NormalTok{q }\OtherTok{\textless{}{-}} \FunctionTok{as.data.frame.matrix}\NormalTok{(}\FunctionTok{cbind}\NormalTok{(q1, q2))}
+
+\NormalTok{cleaned\_wH }\OtherTok{\textless{}{-}} \FunctionTok{cbind}\NormalTok{(num\_stand\_wH, q)}
+\FunctionTok{head}\NormalTok{(cleaned\_wH)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   Temperature..C. Apparent.Temperature..C.  Humidity Wind.Speed..km.h.
+## 1      -0.2575977               -0.3240338 0.7934663        0.47863251
+## 2      -0.2698121               -0.3390953 0.6399922        0.49959129
+## 3      -0.2674856               -0.1381015 0.7934663       -0.99546821
+## 4      -0.3814869               -0.4590684 0.4865181        0.47630376
+## 5      -0.3326292               -0.3624667 0.4865181        0.03384067
+## 6      -0.2837715               -0.3500020 0.5888342        0.45534498
+##   Wind.Bearing..degrees. Visibility..km. Pressure..millibars. null rain snow
+## 1              0.5912529        1.306969            0.1016847    0    1    0
+## 2              0.6657523        1.306969            0.1059593    0    1    0
+## 3              0.1535690        1.099580            0.1086095    0    1    0
+## 4              0.7588766        1.306969            0.1126276    0    1    0
+## 5              0.6657523        1.306969            0.1134826    0    1    0
+## 6              0.6564399        1.099580            0.1147649    0    1    0
+##   Breezy Breezy and Dry Breezy and Foggy Breezy and Mostly Cloudy
+## 1      0              0                0                        0
+## 2      0              0                0                        0
+## 3      0              0                0                        0
+## 4      0              0                0                        0
+## 5      0              0                0                        0
+## 6      0              0                0                        0
+##   Breezy and Overcast Breezy and Partly Cloudy Clear
+## 1                   0                        0     0
+## 2                   0                        0     0
+## 3                   0                        0     0
+## 4                   0                        0     0
+## 5                   0                        0     0
+## 6                   0                        0     0
+##   Dangerously Windy and Partly Cloudy Drizzle Dry Dry and Mostly Cloudy
+## 1                                   0       0   0                     0
+## 2                                   0       0   0                     0
+## 3                                   0       0   0                     0
+## 4                                   0       0   0                     0
+## 5                                   0       0   0                     0
+## 6                                   0       0   0                     0
+##   Dry and Partly Cloudy Foggy Humid and Mostly Cloudy Humid and Overcast
+## 1                     0     0                       0                  0
+## 2                     0     0                       0                  0
+## 3                     0     0                       0                  0
+## 4                     0     0                       0                  0
+## 5                     0     0                       0                  0
+## 6                     0     0                       0                  0
+##   Humid and Partly Cloudy Light Rain Mostly Cloudy Overcast Partly Cloudy Rain
+## 1                       0          0             0        0             1    0
+## 2                       0          0             0        0             1    0
+## 3                       0          0             1        0             0    0
+## 4                       0          0             0        0             1    0
+## 5                       0          0             1        0             0    0
+## 6                       0          0             0        0             1    0
+##   Windy Windy and Dry Windy and Foggy Windy and Mostly Cloudy
+## 1     0             0               0                       0
+## 2     0             0               0                       0
+## 3     0             0               0                       0
+## 4     0             0               0                       0
+## 5     0             0               0                       0
+## 6     0             0               0                       0
+##   Windy and Overcast Windy and Partly Cloudy
+## 1                  0                       0
+## 2                  0                       0
+## 3                  0                       0
+## 4                  0                       0
+## 5                  0                       0
+## 6                  0                       0
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{sample }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(}\FunctionTok{c}\NormalTok{(T, F), }\FunctionTok{nrow}\NormalTok{(cleaned\_wH), }\AttributeTok{replace=}\NormalTok{T, }\AttributeTok{prob=}\FunctionTok{c}\NormalTok{(}\FloatTok{0.75}\NormalTok{, }\FloatTok{0.25}\NormalTok{))}
+\NormalTok{test\_wH }\OtherTok{\textless{}{-}}\NormalTok{ cleaned\_wH[}\SpecialCharTok{!}\NormalTok{sample,]}
+\NormalTok{train\_wH }\OtherTok{\textless{}{-}}\NormalTok{ cleaned\_wH[sample,]}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Task c}\label{task-c-1}
+
+Reason for chosen variables:
+
+\begin{itemize}
+\tightlist
+\item
+  Temperate (C) : Baseline that gets moved
+\item
+  Humidity : Feels a lot hotter when its more humid, harder to sweat
+\item
+  Wind speed : Wind makes skin feel colder
+\item
+  Pressure : Pressure changes based on if it may rain or not, feels
+  different
+\item
+  Rain/Snow : If it rains the air feels colder
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{wH\_lm }\OtherTok{\textless{}{-}}\NormalTok{ train\_wH }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{lm}\NormalTok{(Apparent.Temperature..C. }\SpecialCharTok{\textasciitilde{}}\NormalTok{ rain }\SpecialCharTok{+}\NormalTok{ snow }\SpecialCharTok{+}\NormalTok{ Pressure..millibars. }\SpecialCharTok{+}\NormalTok{ Humidity }\SpecialCharTok{+}\NormalTok{ Temperature..C. }\SpecialCharTok{+}\NormalTok{ Wind.Speed..km.h., .)}
+
+\FunctionTok{summary.aov}\NormalTok{(wH\_lm)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##                         Df Sum Sq Mean Sq F value Pr(>F)    
+## rain                     1  22548   22548 2238282 <2e-16 ***
+## snow                     1    785     785   77921 <2e-16 ***
+## Pressure..millibars.     1      2       2     214 <2e-16 ***
+## Humidity                 1  17058   17058 1693291 <2e-16 ***
+## Temperature..C.          1  31169   31169 3094079 <2e-16 ***
+## Wind.Speed..km.h.        1    255     255   25294 <2e-16 ***
+## Residuals            72385    729       0                   
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{summary}\NormalTok{(wH\_lm)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = Apparent.Temperature..C. ~ rain + snow + Pressure..millibars. + 
+##     Humidity + Temperature..C. + Wind.Speed..km.h., data = .)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.39581 -0.06833 -0.00954  0.06153  0.50383 
+## 
+## Coefficients:
+##                        Estimate Std. Error  t value Pr(>|t|)    
+## (Intercept)           0.0412733  0.0051298    8.046 8.69e-16 ***
+## rain                 -0.0370676  0.0051474   -7.201 6.02e-13 ***
+## snow                 -0.0776405  0.0052985  -14.653  < 2e-16 ***
+## Pressure..millibars.  0.0020225  0.0003750    5.393 6.96e-08 ***
+## Humidity              0.0161676  0.0005163   31.315  < 2e-16 ***
+## Temperature..C.       0.9961083  0.0005934 1678.596  < 2e-16 ***
+## Wind.Speed..km.h.    -0.0626910  0.0003942 -159.042  < 2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.1004 on 72385 degrees of freedom
+## Multiple R-squared:  0.9899, Adjusted R-squared:  0.9899 
+## F-statistic: 1.188e+06 on 6 and 72385 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+As can be seen an the ANOVA and t test for the different values, they
+are all significant within \(\alpha \approx 0\) which means that there
+is almost 0 chance that the factors are due to random chance. (FIX
+LATER, DOUBBLE CHECK)
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{y\_test\_true }\OtherTok{\textless{}{-}}\NormalTok{ test\_wH}\SpecialCharTok{$}\NormalTok{Apparent.Temperature..C.}
+\NormalTok{y\_test\_pred }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(wH\_lm, }\AttributeTok{newdata =}\NormalTok{ test\_wH)}
+\NormalTok{y\_train\_true }\OtherTok{\textless{}{-}}\NormalTok{ train\_wH}\SpecialCharTok{$}\NormalTok{Apparent.Temperature..C.}
+\NormalTok{y\_train\_pred }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(wH\_lm, }\AttributeTok{newdata =}\NormalTok{ train\_wH)}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{RMSE}\label{rmse}
+
+\[ \text{RMSE}(y, \hat{y}) = \sqrt{\frac{\sum_{i=0}^{N - 1} (y_i - \hat{y}_i)^2}{N}} \]
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{rmse\_test }\OtherTok{\textless{}{-}} \FunctionTok{RMSE}\NormalTok{(y\_test\_pred, y\_test\_true)}
+\NormalTok{rmse\_train }\OtherTok{\textless{}{-}} \FunctionTok{RMSE}\NormalTok{(y\_train\_pred, y\_train\_true)}
+\NormalTok{rmse\_test}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.1003458
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{rmse\_test}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.1003458
+\end{verbatim}
+
+\subsubsection{MAE}\label{mae}
+
+\[ \text{MAE}(x,y) = \sum_{i=1}^{D}|x_i-y_i|  \]
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{mae\_test }\OtherTok{\textless{}{-}} \FunctionTok{MAE}\NormalTok{(y\_test\_pred, y\_test\_true)}
+\NormalTok{mae\_train }\OtherTok{\textless{}{-}} \FunctionTok{MAE}\NormalTok{(y\_train\_pred, y\_train\_true)}
+\NormalTok{mae\_test}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.07899319
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{mae\_train}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.078913
+\end{verbatim}
+
+\subsubsection{\texorpdfstring{\(\text{R}^{2}\) score (coefficient of
+determination)}{\textbackslash text\{R\}\^{}\{2\} score (coefficient of determination)}}\label{textr2-score-coefficient-of-determination}
+
+\[ 
+R^2 = 1 - \frac{\text{SSR (sum of square regression)}}{\text{SST (total sum of squares)}} 
+= 1 - \frac{\sum_{i=0}^{N - 1} (y_i - \hat{y}_i)^2}{\sum_{i=0}^{N - 1} (y_i - \hat{y})^2}
+\]
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{R2\_test }\OtherTok{\textless{}{-}} \FunctionTok{R2}\NormalTok{(y\_test\_pred, y\_test\_true)}
+\NormalTok{R2\_train }\OtherTok{\textless{}{-}} \FunctionTok{R2}\NormalTok{(y\_train\_pred, y\_train\_true)}
+\NormalTok{R2\_test}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.9898663
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{R2\_train}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.9899486
+\end{verbatim}
+
+\section{Exercise 3 - Linear Regression and Diagnostic
+Plots}\label{exercise-3---linear-regression-and-diagnostic-plots}
+
+\subsection{Task a}\label{task-a-2}
+
+\subsubsection{a) Linearity}\label{a-linearity}
+
+The relationship between X and Y is linear.
+
+If a function is linear, then all factors increase at a consistent rate
+for each step. Gradient and all partial first order derivatives will be
+a function of constants Linear function: \(y(x,z) = 2x + 4z + 5xz + 10\)
+Non-Linear function: \(y(x,z) = 2x^2 + 5z^5\)
+
+\subsubsection{b) Homoscedasticity}\label{b-homoscedasticity}
+
+Residuals have constant variance.
+
+homogeneity of variance assumes that all observations are picked from a
+sources that have equal variance. In other words the data points around
+a linear model should vary equally from the line, if there are any cone
+shape or other such irregularities this assumption is broken and the
+model that will be produced will eb flawed.
+
+\subsubsection{c) Independence}\label{c-independence}
+
+Residuals are independent.
+
+Observations can't depend on each other, in other words if you pick one
+observation from a population for your sample, this should not affect
+the next sample you choose. In other words no observations should depend
+or affect each other.
+
+By the very nature of lm, it is \textbf{assumed} that you have a i.i.d
+dataset. This has to be done in the sampeling stage, not the cleaning
+stage.
+
+\subsubsection{d) Normaility}\label{d-normaility}
+
+Residuals are normally distributed.
+
+Assumes that the data follows a normal distribution.
+
+Can be tested by making a Q-Q plot and seeing how well the data points
+follows the line. If the right tail is very heavy, you probably should
+log the value slightly heavy tails can still be used because of the law
+of large numbers.
+
+\subsection{Task b}\label{task-b-2}
+
+These are all diagnostic plots that allow us to test our assumptions
+
+\subsubsection{Residuals vs Fitted}\label{residuals-vs-fitted}
+
+A scatter plot where residuals are on the y-axis and fitted values are
+on the x-axis. Used to detect non-linearity, unequal error variances,
+and outliers.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{plot}\NormalTok{(wH\_lm,}\DecValTok{1}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Ass1_files/figure-latex/E3_b_1-1.pdf}
+
+\subsubsection{Normal Q-Q}\label{normal-q-q}
+
+Points on the Normal Q-Q plot provide an indication of univariate
+normality of the dataset. If the data is normally distributed, the
+points will fall on the line, otherwise it implies that the assumption
+of Normality is broken. To test for normality of residuals
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{plot}\NormalTok{(wH\_lm,}\DecValTok{2}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Ass1_files/figure-latex/E3_b_2-1.pdf}
+
+\subsubsection{Scale-Location (or
+Spread-Location)}\label{scale-location-or-spread-location}
+
+Simmilar to residuals vs fitted, but instead of using residuals on the
+y-axis it uses the square root of the residuals. Used to check for the
+assumption of homoscedascity. If the line is roughly horizontal and
+there is no clear pattern (like a cone) in the scatter plot then
+homoscedacity is lokely satisfied.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{plot}\NormalTok{(wH\_lm,}\DecValTok{3}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Ass1_files/figure-latex/E3_b_3-1.pdf}
+
+\subsubsection{Residuals vs Leverage}\label{residuals-vs-leverage}
+
+Allows us to identify influential observations \textbf{Leverage:} extent
+to which the coefficients in the regression model would change if a
+particular observations was removed from the dataset (outliers).
+\textbf{Standarized residuals:} standardized difference between a
+predicted value for an observation and the actual value of the
+observation.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{plot}\NormalTok{(wH\_lm,}\DecValTok{5}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Ass1_files/figure-latex/E3_b_4-1.pdf}
+
+\subsection{Task c}\label{task-c-2}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{data\_gen }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(}\AttributeTok{c=}\DecValTok{0}\NormalTok{, }\AttributeTok{t=}\DecValTok{0}\NormalTok{, }\AttributeTok{cm=}\DecValTok{0}\NormalTok{, }\AttributeTok{cp=}\DecValTok{100}\NormalTok{, }\AttributeTok{cs=}\DecValTok{0}\NormalTok{, }\AttributeTok{nnm=}\DecValTok{1}\NormalTok{, }\AttributeTok{nnp=}\DecValTok{10000}\NormalTok{, }\AttributeTok{snn=}\DecValTok{500}\NormalTok{, }\AttributeTok{nnnm=}\DecValTok{0}\NormalTok{, }\AttributeTok{nnnp=}\DecValTok{10000}\NormalTok{, }\AttributeTok{snnn=}\DecValTok{500}\NormalTok{) \{}
+  \FunctionTok{set.seed}\NormalTok{(}\DecValTok{42}\NormalTok{)}
+  
+\NormalTok{  n }\OtherTok{\textless{}{-}} \DecValTok{1000}
+\NormalTok{  x }\OtherTok{\textless{}{-}} \DecValTok{1}\SpecialCharTok{:}\NormalTok{n}
+  
+  \CommentTok{\# Changeable parameters}
+  \CommentTok{\# {-} Change the parameters to affect the generated data points below.}
+  \CommentTok{\# {-} You may copy this code multiple times to answer all the questions in the exercise.}
+  \CommentTok{\# {-} You may find it reasonable to argue for multiple violations from a single generated set of data points.}
+  
+\NormalTok{  contant }\OtherTok{\textless{}{-}}\NormalTok{ c }
+\NormalTok{  trend }\OtherTok{\textless{}{-}}\NormalTok{ t}
+\NormalTok{  curve\_magnitue }\OtherTok{\textless{}{-}}\NormalTok{ cm}
+\NormalTok{  curve\_period }\OtherTok{\textless{}{-}}\NormalTok{ cp}
+\NormalTok{  curve\_shift }\OtherTok{\textless{}{-}}\NormalTok{ cs}
+\NormalTok{  normal\_noise\_magnitue }\OtherTok{\textless{}{-}}\NormalTok{ nnm}
+\NormalTok{  norm\_noise\_periode }\OtherTok{\textless{}{-}}\NormalTok{ nnp}
+\NormalTok{  shift\_norm\_noise }\OtherTok{\textless{}{-}}\NormalTok{ snn}
+\NormalTok{  non\_normal\_noise\_magnitue }\OtherTok{\textless{}{-}}\NormalTok{ nnnm}
+\NormalTok{  non\_norm\_noice\_periode }\OtherTok{\textless{}{-}}\NormalTok{ nnnp}
+\NormalTok{  shift\_non\_norm\_noise }\OtherTok{\textless{}{-}}\NormalTok{ snnn}
+  
+\NormalTok{  y.gen }\OtherTok{\textless{}{-}}\NormalTok{ contant }\SpecialCharTok{+}
+\NormalTok{    trend }\SpecialCharTok{*}\NormalTok{ x }\SpecialCharTok{+} 
+\NormalTok{    curve\_magnitue}\SpecialCharTok{*} \FunctionTok{sin}\NormalTok{(}
+\NormalTok{      (x}\SpecialCharTok{/}\NormalTok{curve\_period }\SpecialCharTok{+}\NormalTok{ curve\_shift)}\SpecialCharTok{*}\NormalTok{pi}
+\NormalTok{      ) }\SpecialCharTok{+} 
+\NormalTok{    normal\_noise\_magnitue}\SpecialCharTok{*}\FunctionTok{cos}\NormalTok{(}
+\NormalTok{      (x}\SpecialCharTok{/}\NormalTok{norm\_noise\_periode }\SpecialCharTok{+}\NormalTok{ shift\_norm\_noise}\SpecialCharTok{/}\NormalTok{norm\_noise\_periode)}\SpecialCharTok{*}\NormalTok{pi}
+\NormalTok{      )}\SpecialCharTok{*}\FunctionTok{rnorm}\NormalTok{(n, }\AttributeTok{sd =} \DecValTok{3}\NormalTok{) }\SpecialCharTok{+}
+\NormalTok{    non\_normal\_noise\_magnitue}\SpecialCharTok{*}\FunctionTok{cos}\NormalTok{(}
+\NormalTok{      (x}\SpecialCharTok{/}\NormalTok{non\_norm\_noice\_periode }\SpecialCharTok{+}\NormalTok{ shift\_non\_norm\_noise}\SpecialCharTok{/}\NormalTok{non\_norm\_noice\_periode)}\SpecialCharTok{*}\NormalTok{pi}
+\NormalTok{      ) }\SpecialCharTok{*} \FunctionTok{rexp}\NormalTok{(n, }\AttributeTok{rate =} \FloatTok{0.2}\NormalTok{) }
+  
+\NormalTok{  p }\OtherTok{\textless{}{-}} \FunctionTok{qplot}\NormalTok{(x, y.gen, }\AttributeTok{ylab =} \StringTok{"y"}\NormalTok{) }\SpecialCharTok{+}
+    \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{size =} \FloatTok{0.1}\NormalTok{) }\SpecialCharTok{+}
+    \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"Data generate for linear regrestion"}\NormalTok{)}
+  
+  \CommentTok{\# Display the plot}
+  \FunctionTok{print}\NormalTok{(p)}
+  \FunctionTok{return}\NormalTok{(}\FunctionTok{list}\NormalTok{(}\StringTok{"x"}\OtherTok{=}\NormalTok{x,}\StringTok{"y.gen"}\OtherTok{=}\NormalTok{y.gen))}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Holds all the
+assumptions}\label{holds-all-the-assumptions}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{gen\_data }\OtherTok{\textless{}{-}} \FunctionTok{data\_gen}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: `qplot()` was deprecated in ggplot2 3.4.0.
+## This warning is displayed once every 8 hours.
+## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+## generated.
+\end{verbatim}
+
+\includegraphics{Ass1_files/figure-latex/E3_c_plots-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lm.gen }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(gen\_data}\SpecialCharTok{$}\NormalTok{y.gen }\SpecialCharTok{\textasciitilde{}}\NormalTok{ gen\_data}\SpecialCharTok{$}\NormalTok{x)}
+\FunctionTok{plot}\NormalTok{(lm.gen, }\AttributeTok{which =} \DecValTok{1}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Ass1_files/figure-latex/E3_c_plots-2.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{plot}\NormalTok{(lm.gen, }\AttributeTok{which =} \DecValTok{2}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Ass1_files/figure-latex/E3_c_plots-3.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{plot}\NormalTok{(lm.gen, }\AttributeTok{which =} \DecValTok{3}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Ass1_files/figure-latex/E3_c_plots-4.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{plot}\NormalTok{(lm.gen, }\AttributeTok{which =} \DecValTok{5}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Ass1_files/figure-latex/E3_c_plots-5.pdf}
+
+\subsubsection{Breaks the assumption of
+Homoscedastiicty}\label{breaks-the-assumption-of-homoscedastiicty}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{gen\_data }\OtherTok{\textless{}{-}} \FunctionTok{data\_gen}\NormalTok{(}\AttributeTok{nnnm =} \SpecialCharTok{{-}}\DecValTok{10000}\NormalTok{, }\AttributeTok{snnn =} \DecValTok{5000}\NormalTok{, }\AttributeTok{nnnp =} \DecValTok{50000}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Ass1_files/figure-latex/E3_c_bHomoscedastiicty-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lm.gen }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(gen\_data}\SpecialCharTok{$}\NormalTok{y.gen }\SpecialCharTok{\textasciitilde{}}\NormalTok{ gen\_data}\SpecialCharTok{$}\NormalTok{x)}
+\FunctionTok{plot}\NormalTok{(lm.gen, }\AttributeTok{which =} \DecValTok{2}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Ass1_files/figure-latex/E3_c_bHomoscedastiicty-2.pdf}
+
+\subsubsection{Breaks the assumption of
+Linearity}\label{breaks-the-assumption-of-linearity}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{gen\_data }\OtherTok{\textless{}{-}} \FunctionTok{data\_gen}\NormalTok{(}\AttributeTok{nnnm =} \SpecialCharTok{{-}}\DecValTok{10000}\NormalTok{, }\AttributeTok{snnn =} \DecValTok{5000}\NormalTok{, }\AttributeTok{cs=}\DecValTok{10000}\NormalTok{, }\AttributeTok{cm =} \DecValTok{10000}\NormalTok{, }\AttributeTok{snn =} \DecValTok{10000}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Ass1_files/figure-latex/E3_c_bLinear-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lm.gen }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(gen\_data}\SpecialCharTok{$}\NormalTok{y.gen }\SpecialCharTok{\textasciitilde{}}\NormalTok{ (gen\_data}\SpecialCharTok{$}\NormalTok{x)}\SpecialCharTok{\^{}}\DecValTok{4}\NormalTok{)}
+\FunctionTok{plot}\NormalTok{(lm.gen, }\DecValTok{1}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Ass1_files/figure-latex/E3_c_bLinear-2.pdf}
+
+\subsubsection{Breaks the assumption of
+Normality.}\label{breaks-the-assumption-of-normality.}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{gen\_data }\OtherTok{\textless{}{-}} \FunctionTok{data\_gen}\NormalTok{(}\AttributeTok{nnnm =} \DecValTok{10000}\NormalTok{, }\AttributeTok{snnn =} \DecValTok{5000}\NormalTok{, }\AttributeTok{cs=}\DecValTok{10000}\NormalTok{, }\AttributeTok{cm =} \DecValTok{10000}\NormalTok{, }\AttributeTok{snn =} \DecValTok{10000}\NormalTok{, }\AttributeTok{nnm =} \DecValTok{0}\NormalTok{, }\AttributeTok{nnnp =} \DecValTok{5000}\NormalTok{, }\AttributeTok{t =} \DecValTok{1}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Ass1_files/figure-latex/E3_c_bNorm-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lm.gen }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(gen\_data}\SpecialCharTok{$}\NormalTok{y.gen }\SpecialCharTok{\textasciitilde{}}\NormalTok{ gen\_data}\SpecialCharTok{$}\NormalTok{x)}
+\FunctionTok{plot}\NormalTok{(lm.gen, }\DecValTok{2}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Ass1_files/figure-latex/E3_c_bNorm-2.pdf}
+
+\subsection{Task d}\label{task-d-1}
+
+\subsubsection{Breaks Homoscedasticity}\label{breaks-homoscedasticity}
+
+The error distibution is not consistent, aka
+\[ \epsilon_i \ne \sigma^2 \] instead it is
+\[ \sigma_{i}^2 = x_{i} \sigma^2 \], in other words heteroscedastic.
+
+If plot X against Y you will see a cone shape instead of expected line,
+clearly there are different distributions of variances based on X
+
+\subsubsection{Breaks Linearity}\label{breaks-linearity}
+
+The Residual vs Fitted shows a clear cone as well as a clear non-linear
+pattern between X and Y
+
+\subsubsection{Breaks Normality}\label{breaks-normality}
+
+The Q-Q Normal plot clearly shows high bias towards the tails
+
+\section{Exercise 4 - correlation and partial
+correlation}\label{exercise-4---correlation-and-partial-correlation}
+
+\subsection{Task a}\label{task-a-3}
+
+\textbf{Correlation:} Degree to which a pair of variables/factors are
+linearly related. As in the increase in one variable either increases or
+decreases another. Correlation does not imply causation, even if Smoking
+and higher life expectancy is higher in one area, that doesn't
+automatically imply that smoking is healthy. The correlation
+coefficient, typically denoted as ρ, ranges from -1 to 1: * A value of 1
+indicates a perfect positive correlation, * A value of -1 indicates a
+perfect negative correlation, * A value of 0 indicates no correlation.
+
+\textbf{Effect of Scaling:} When variables are scaled by constants α1
+and α2, the correlation is unaffected in magnitude but may change sign:
+ρW1W2 = cov(α1X, α2Y) / (sqrt(var(α1X)) * sqrt(var(α2Y))) This
+simplifies to: ρW1W2 = sgn(α1α2) * ρXY Thus, scaling does not change the
+inherent linear relationship but can alter its direction.
+
+Higher variance decreases correlation, while higher covariance increases
+it. In other words the more the two variables/factors trend and the less
+variance from that trend they have the more correlated the two
+varaibles/factors are.
+
+\subsection{Task b}\label{task-b-3}
+
+\textbf{Partial correlation:} measures the degree of association between
+two random variables, with the effect of a set of controlling random
+variables removed.
+\href{https://en.wikipedia.org/wiki/Partial_correlation}{Wiki} Helps to
+understand the relationship between two variables, controlling for the
+effect of one or more additional variables.
+
+The formula describes the correlation between the residuals \(e_X\) and
+\(e_Y\) resulting from the linear regression of X with Z and of Y with
+Z, respectively.
+
+\subsubsection{Scenarios}\label{scenarios}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  You suspect there are inter dependencies between X=Study hours per
+  week, Y=Exam score and Z=IQ
+\item
+  You suspect there are inter dependencies between X=Calories consumed,
+  Y=Weight loss and Z=Hours of intense exercise.
+\item
+  You suspect there are inter dependencies between X=Time spent on
+  social media, Y=Self-esteem and Z=Age
+\end{enumerate}
+
+\subsection{Task c}\label{task-c-3}
+
+Yes, the property of correlation regarding scaling holds for partial
+correlation as well. Just like regular correlation, partial correlation
+is not affected by scaling of the variables, only the direction or sign
+can change. Let's do the math so see how this is the case:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  In the partial correlation formula we have: Pxy Pxz Pyz
+\item
+  if we then scale the x and y variables with a1 and a2 we get: Pxy =
+  sgn(a1,a2)\emph{Pxy Pxz = sgn(a1)}Pxz Pyz = sgn(a2)*Pyz
+\item
+  Then we substitute the coefficients with the scaled ones and obtain
+  the formula: Pxy\textbar z = (Pxy - Pxz\emph{Pyz) /
+  (sqrt(1-(Pxz)\^{}2)}sqrt(1-(Pyz)\^{}2) -\textgreater{}
+  (sgn(a1,a2)\emph{Pxy - sgn(a1)}Pxz\emph{sgn(a2)}Pyz) /
+  (sqrt(1-(sgn(a1)*Pxz)\textsuperscript{2)\emph{sqrt(1-(sgn(a2)}Pyz)}2)
+\item
+  after doing the math and simplifying the formula we obtain
+  sgn(a1,a2)*Pxy\textbar z
+\end{enumerate}
+
+\subsection{Task d}\label{task-d-2}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{weatherHistory }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"weatherHistory.csv"}\NormalTok{)}
+\NormalTok{select\_wH }\OtherTok{\textless{}{-}}\NormalTok{ weatherHistory }\SpecialCharTok{\%\textgreater{}\%}\NormalTok{ dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(Temperature..C., Apparent.Temperature..C., Humidity)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{pairwise\_corr }\OtherTok{\textless{}{-}}\NormalTok{ select\_wH }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{cor}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{data.frame}\NormalTok{()}
+\NormalTok{pairwise\_corr}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##                          Temperature..C. Apparent.Temperature..C.   Humidity
+## Temperature..C.                1.0000000                0.9926286 -0.6322547
+## Apparent.Temperature..C.       0.9926286                1.0000000 -0.6025710
+## Humidity                      -0.6322547               -0.6025710  1.0000000
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{part\_corr }\OtherTok{\textless{}{-}}\NormalTok{ select\_wH }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{pcor}\NormalTok{()}
+
+\NormalTok{part\_corr}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## $estimate
+##                          Temperature..C. Apparent.Temperature..C.   Humidity
+## Temperature..C.                1.0000000                0.9892298 -0.3528185
+## Apparent.Temperature..C.       0.9892298                1.0000000  0.2664916
+## Humidity                      -0.3528185                0.2664916  1.0000000
+## 
+## $p.value
+##                          Temperature..C. Apparent.Temperature..C. Humidity
+## Temperature..C.                        0                        0        0
+## Apparent.Temperature..C.               0                        0        0
+## Humidity                               0                        0        0
+## 
+## $statistic
+##                          Temperature..C. Apparent.Temperature..C.   Humidity
+## Temperature..C.                   0.0000               2098.90993 -117.10342
+## Apparent.Temperature..C.       2098.9099                  0.00000   85.86793
+## Humidity                       -117.1034                 85.86793    0.00000
+## 
+## $n
+## [1] 96453
+## 
+## $gp
+## [1] 1
+## 
+## $method
+## [1] "pearson"
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Apparent.Temperature..C. and Temperature..C. has a partial correlation
+  value of ca 0.99 which implies that they are highly consistent with
+  each other and increase with each other. Very low difference between
+  pairwise to partial where they are equal if rounded to nearest 2
+  decimal, which implies that Z=Humidity has very little effect on them.
+\item
+  Humidity and Temperature..C. has a low partial correlation value of
+  -0.35 which implies that they are not consistent with each other and
+  decreases when the other increases. Decreases from -0.63 to -0.35
+  which implies that Z=Apparent.Temperature.C.. is affecting them. Z is
+  a significant confounder.
+\item
+  Humidity and Apparent.Temperature..C. has a low partial correlation
+  value of 0.27 which implies that they are not consistent with each
+  other and increase with each other. Dropped from pairwise correlation
+  -0.60 to 0.27 which implies that Z=Temperature..C. is significantly
+  affecting them. Z is a significant cofunder.
+\end{itemize}
+
+\end{document}
