@@ -156,9 +156,9 @@ NHMC.GT has almost all missing values after a certain time, as seen in the visua
 
 -   Discuss options for handling missing values: (a) drop all time points containing any missing value, (b) impute values for missing values. In case of (b) choose a method for imputation. Justify your decisions.
 
-* **(a)** By dropping all NA we only get real data to do anaylizis on, but we miss out on number of datapoints so our overall accuracy becomes lower.
+* **(a)** By dropping all NA we only get real data to do anaylizis on, but we miss out on number of datapoints so our overall accuracy becomes lower. In addition it is not possible as we need a regular time axis.
 * **(b)** By imputing we can still use rows that are mostly NA free while having the model be skewed as little as possible by these values.
-  - Choose to set the NA to the mean value of the overall dataset, therby making the datapoint the most probable if we were to get it randomly.
+  - Choose to set the NA to the mean value of the overall dataset, therby making the datapoint the most probable if we were to get it randomly. By ussing rolling average we also get the most probable next step from the previous k steps, therfore making it more locally accurate than just using mean.
 
 -   At the end of this step, you should have a version of the data containing only valid values. Plot these data as in Part B.
 
@@ -169,8 +169,10 @@ airqual_c <- airqual %>%
 airqual_c[airqual_c == -200] = NA
 
 #airqual_c <- imputeTS::na_mean(airqual_c, option = "mean")
-# rolling mean
+# Missing Value Imputation by Weighted Moving Average, Simple moving average
+# Plain rolling average
 airqual_c <- imputeTS::na_ma(airqual_c, k = 4, weighting = "simple")
+
 airqual_c %>% 
   pivot_longer(!timedate, names_to="Features", values_to="Measurement") %>%
   ggplot(aes(x =  timedate, y = Measurement, col = Features)) + 
@@ -217,11 +219,11 @@ summary(pca)$importance[3,]
 
 -   Choose how many PCs to keep and transform data back to original sample space
 
-Keep to 0.99 mark, so PC1 to PC7
+Keep to 0.99 mark, so PC1 to PC6
 
 ```{r}
-t <- datetime
-x_1 <- pca$x[, 1:7] %*% t(pca$rotation[, 1:7])
+t <- airqual_c$timedate
+x_1 <- pca$x[, 1:6] %*% t(pca$rotation[, 1:6])
 x_2 <- t(pca$center + pca$scale * t(x_1))
 ```
 
@@ -258,7 +260,7 @@ Looks mostly the same, but deviates slightly as we removed all after PC7.
 ### Whole
 
 ```{r}
-data.frame(timedate = airqual_c$timedate, pca$x[,1:7]) %>% 
+data.frame(timedate = airqual_c$timedate, pca$x[,1:6]) %>% 
   pivot_longer(!timedate, names_to="Features", values_to="Scores") %>%
   ggplot(aes(x =  timedate, y = Scores, col = Features)) + 
   geom_line() + 
@@ -268,7 +270,7 @@ data.frame(timedate = airqual_c$timedate, pca$x[,1:7]) %>%
 ```
 ### Zoomed
 ```{r}
-data.frame(timedate = airqual_c$timedate[1:100], pca$x[1:100,1:7]) %>% 
+data.frame(timedate = airqual_c$timedate[1:100], pca$x[1:100,1:6]) %>% 
   pivot_longer(!timedate, names_to="Features", values_to="Scores") %>%
   ggplot(aes(x =  timedate, y = Scores, col = Features)) + 
   geom_line() + 
@@ -324,17 +326,6 @@ timeoffsets <- 'PT0H'
 
 
 .query_url <- str_glue("https://{.client_id}@{server}/{resource}?sources={sources}&referencetime={reference_time}&elements={elements}&timeoffsets={timeoffsets}")
-
-#.stations_url = str_glue("https://{.client_id}@frost.met.no/sources/v0.jsonld")
-#raw_stations <- fromJSON(URLencode(.stations_url), flatten=TRUE)
-
-# COUNTYS = c(fylke1, fylke2, etc)   # replace with names of "fylker" you are interested in
-# 
-# stations <- unnest(raw_stations$data, cols='id') |>
-#   select(id, validFrom, country, county, municipality, name, masl, `@type`) |>
-#   mutate(validFrom=as.Date(validFrom)) |>
-#   filter(`@type` == "SensorSystem" & validFrom <= "1950-01-01" & country == "Norge" & county %in% COUNTYS)
-
 ```
 
 ```{r}
@@ -368,11 +359,8 @@ head(df)
 df |> dplyr::select(referenceTime, value) |>
       mutate(referenceTime=as.Date(referenceTime)) |>
       rename(Date=referenceTime, Temp=value) |> 
-      mutate(Year=year(Date), Week=week(Date),
-             Decade = as.factor(Year - Year %% 10)) |>
-      as_tibble() -> dc
-dc
-
+      as_tsibble() -> dc
+head(dc)
 ```
 
 
@@ -382,12 +370,89 @@ dc
 ## Part B: Data preparation for a single station
 
 -   Identify gaps in the time series.
+
+```{r}
+has_gaps(dc)
+gaps <- count_gaps(dc)
+head(gaps)
+```
+
+
 -   Assume that gaps up to 31 days are acceptable. Find the earliest date in the time series such that all following data have no gaps longer than 31 days. Limit the time series to this.
+
+```{r}
+cutoff_date <-  as.character(tail(gaps[gaps$.n >= 31,], n=1)$.to)
+cutoff_date
+```
+identify that all dates after, even if 31 is included, is 1988-06-17
+
+```{r}
+dc_cut <- dc %>% tsibble::filter_index(cutoff_date ~ .) 
+head(dc_cut)
+```
+
+
+
 -   Create a regular time series by filling gaps in the tsibble with n/a-s.
+
+```{r}
+dc_cut_filled <- tsibble::fill_gaps(dc_cut, .full = TRUE)
+
+head(dc_cut_filled)
+
+```
+
+
 -   Impute values for the n/a-s. Justify your choice of imputation method.
+
+Choose to impute using simple rolling average, as you get the adventage of getting the most probable next step as well as being locally probable as opposed to using to mean or median for the whole dataset.
+
+```{r}
+dc_cut_filled_imp <- imputeTS::na_ma(dc_cut_filled, k = 4, weighting = "simple")
+```
+
+
 -   You should now have a regular time series with only numeric values.
+
+```{r}
+tsibble::has_gaps(dc_cut_filled_imp)
+is.numeric(dc_cut_filled_imp$Temp)
+dc_cut_filled_imp %>%
+  ggplot(aes(Date, Temp)) +
+  geom_line()
+
+```
+
+
 -   Remove all data for 29 February so all years have data for exactly 365 days.
+
+```{r}
+dc_cut_filled_imp_noLeap <- dc_cut_filled_imp %>% 
+  dplyr::filter(!(month(Date) == 2 & day(Date) == 29))
+head(dc_cut_filled_imp_noLeap)
+```
+
+
 -   Combine all this code into a function for re-use later. The function should receive the original tsibble from part A as input and return a new tsibble.
+
+```{r}
+timeseries_cleaner <- function(table) {
+  gaps <- count_gaps(table)
+  cutoff_date <-  as.character(tail(gaps[gaps$.n >= 31,], n=1)$.to)
+  dc_cut <- dc %>% tsibble::filter_index(cutoff_date ~ .) 
+  dc_cut_filled_imp <- imputeTS::na_ma(dc_cut_filled, k = 4, weighting = "simple")
+  dc_cut_filled_imp_noLeap <- dc_cut_filled_imp %>% 
+    dplyr::filter(!(month(Date) == 2 & day(Date) == 29))
+  
+  return(dc_cut_filled_imp_noLeap)
+}
+```
+
+```{r}
+identical(timeseries_cleaner(dc), dc_cut_filled_imp_noLeap)
+```
+
+
 
 ### Hints
 

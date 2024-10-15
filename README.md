@@ -6,14 +6,14 @@
 ## TODO
 
 * Ex 1 [ ]      
-    - a [ ]     Qeis Khaled Qeis
-    - b [ ]     Qeis Khaled Qeis
-    - c [ ]     Qeis Khaled Qeis
-    - d [ ]     Qeis Khaled Qeis
-    - e [ ]     Erling Tennøy Nordtvedt
+    - a [ ]     Qeis Khaled Qeis    (X, Erling)
+    - b [ ]     Qeis Khaled Qeis    (X, Erling)
+    - c [ ]     Qeis Khaled Qeis    (X, Erling)
+    - d [ ]     Qeis Khaled Qeis    (X, Erling)
+    - e [X]     Erling Tennøy Nordtvedt
 * Ex 2 [ ]      
-    - a [ ]     Erling Tennøy Nordtvedt
-    - b [ ]     Erling Tennøy Nordtvedt
+    - a [X]     Erling Tennøy Nordtvedt
+    - b [X]     Erling Tennøy Nordtvedt
     - c [ ]     Oleg Karpov
     - d [ ]     Oleg Karpov
     - e [ ]     Oleg Karpov
