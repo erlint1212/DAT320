@@ -19,6 +19,17 @@ require("lubridate")
 require("tsibble")
 require("ggfortify")
 require("gridExtra")
+require("reshape2")
+
+library(imputeTS)   # Time series missing value imputation
+
+library(jsonlite)   # handle JSON data returned by Frost
+library(tidyr)      # unpack data from JSON format
+library(tidyverse)  # data manipulation with mutate etc, string formatting
+library(lubridate)  # process date and time information
+library(tsibble)    # special tibbles for time series
+library(fpp3)       # autoplot() and gg_season() for time series
+library(readr)      # to read the Frost client ID from file
 ```
 
 # Task 1: Dimension reduction on air quality data
@@ -29,30 +40,18 @@ require("gridExtra")
 -   Provide a brief description of the data based on the information from the website.
 
 ```{r}
-airquality <- read.csv("AirQualityUCI.csv", sep=";")
+airquality <- read.table("AirQualityUCI.csv", sep=";", dec=",", header= T)
 
-datetime <- with(airquality, ymd(as.Date(airquality$Date,format="%Y/%m/%d")) + hms(gsub("\\.", ":", airquality$Time)))
-airquality <- cbind(datetime = datetime, airquality)
-airquality <- airquality %>% subset(select = -c(Time, Date, X, X.1))
-airquality$CO.GT. <- as.integer(round(as.numeric(gsub("\\,", ".", airquality$CO.GT.)), digits=0))
-airquality$PT08.S1.CO. <- factor(airquality$PT08.S1.CO.)
-airquality$C6H6.GT. <- as.numeric(gsub("\\,", ".", airquality$C6H6.GT.))
-airquality$PT08.S2.NMHC. <- factor(airquality$PT08.S2.NMHC.)
-airquality$PT08.S3.NOx. <- factor(airquality$PT08.S3.NOx.)
-airquality$PT08.S4.NO2. <- factor(airquality$PT08.S4.NO2.)
-airquality$PT08.S5.O3. <- factor(airquality$PT08.S5.O3.)
-airquality$T <- as.numeric(gsub("\\,", ".", airquality$T))
-airquality$RH <- as.numeric(gsub("\\,", ".", airquality$RH))
-airquality$AH <- as.numeric(gsub("\\,", ".", airquality$AH))
+airqual <- airquality %>%
+  dplyr::select(-c("X", "X.1")) %>%
+  na.omit() %>%
+  mutate(timedate = dmy_hms(paste(Date, Time))) %>%
+  dplyr::select(-c("Time", "Date")) %>%
+  relocate(timedate) %>%
+  as_tibble()
 
-airquality <- airquality %>% 
-  drop_na(datetime) 
-
-# Remove duplicates by single column (tsibble dosen't like duplicates)
-airquality <- airquality[!duplicated(airquality$datetime), ]
-
-summary(airquality)
-head(airquality)
+summary(airqual)
+head(airqual)
 ```
 
 Contains the responses of a gas multisensor device deployed on the field in an Italian city. Hourly responses averages are recorded along with gas concentrations references from a certified analyzer.
@@ -73,38 +72,66 @@ Has missing values.
 -   Describe the data. What is most striking?
 
 ```{r}
-airqual <- as_tsibble(airquality, index = datetime)
 
-head(airqual)
-
-#airqual %>%
-#  autoplot(vars(CO.GT.))
-
-hist_dens <- function(data, fact_n) {
-  tmp <- data %>%
-  ggplot(aes({{fact_n}})) +
-  geom_histogram(aes(y = after_stat(density)), fill = "white", color="black") +
-  stat_density(kernel = "gaussian", fill = NA, colour = "black")
-  return(tmp)
-}
-
-
-p_T <- hist_dens(airqual, T)
-p_RH <- hist_dens(airqual, RH)
-p_AH <- hist_dens(airqual, AH)
-
-gridExtra::grid.arrange(p_T, p_RH, p_AH, ncol = 2)
-                        
+airqual %>% 
+  pivot_longer(!timedate, names_to="Features", values_to="Measurement") %>%
+  ggplot(aes(x =  timedate, y = Measurement, col = Features)) + 
+    geom_line() + 
+    theme_minimal() +
+  facet_wrap(~ Features, scales = "free_y", ncol = 3)
 ```
-There seems to be multiple -200 in all the numerical (integer and Categorical) data that seems to be outliers.
-Should probably be removed from the dataset.
+There seems to be multiple -200 in all the numerical (integer and Categorical) data that seems to be outliers or missing values.
+Should probably be removed or imputed from the dataset.
 
 ## Part C: PCA of data as is
 
 -   Perform PCA on the data as prepared in B
+```{r}
+pc <- prcomp(airqual[,-1])
+summary(pc)
+```
 -   Create a screeplot and create biplots for 1st and 2nd and for 2nd and 3rd PCs
+
+### Screeplot
+
+```{r}
+plot(pc, type = "l")
+
+pc_v <- data.frame(PC = paste0("PC ", ncol(pc$x)),
+                   var_explained = pc$sdev^2 / sum(pc$sdev^2)) %>%
+          mutate(cum_explained = cumsum(var_explained))
+
+pp <- pc_v[1:3,] %>%
+  pivot_longer(!PC, names_to="Quantity", values_to="Explained") %>%
+  ggplot(aes(x = PC, y = Explained, color=Quantity, group=Quantity))+
+  geom_line() + geom_point() +
+  theme_minimal() +
+  labs(title = "Variance Explained", x = "Principal Component", 
+       y = "Variance Explained")
+
+
+pp + geom_label(aes(label = round(Explained, 2)))
+```
+0.91 of variance is explained in the first 3 principal components
+
+### Biplots
+```{r}
+biplot(pc, scale=0, col=c('blue', 'red'), xlabs=rep('*', nrow(pc$x[, 1:3])))
+```
+
+* Can clearly see the -200 outliers
+* PRO8.S3.NOx positivly correlated between PC1 and PC2
+* NOX.GT. opposite
 -   Plot the scores for the PCs
 -   Comment on the results. Can you relate some features to your observations in part B?
+
+
+
+### Score plot
+```{r}
+d_pc <- data.frame(Time=airqual[,1], pc$x[,1:3])
+head(d_pc)
+```
 
 ### Hints
 
@@ -114,10 +141,43 @@ Should probably be removed from the dataset.
 ## Part D: Missing values
 
 -   Identify missing values in the time series
+
+The website says that all -200 are NA
+
 -   Investigate to which degree missing values occur at the same time for multiple sensors
+```{r}
+
+```
+
+
 -   Is one or are multiple sensors behaving peculiarly? How would you handle this?
+
+NHMC.GT has almost all missing values after a certain time, as seen in the visualizion, therfore remove to not skew the result away from real data.
+
 -   Discuss options for handling missing values: (a) drop all time points containing any missing value, (b) impute values for missing values. In case of (b) choose a method for imputation. Justify your decisions.
+
+* **(a)** By dropping all NA we only get real data to do anaylizis on, but we miss out on number of datapoints so our overall accuracy becomes lower.
+* **(b)** By imputing we can still use rows that are mostly NA free while having the model be skewed as little as possible by these values.
+  - Choose to set the NA to the mean value of the overall dataset, therby making the datapoint the most probable if we were to get it randomly.
+
 -   At the end of this step, you should have a version of the data containing only valid values. Plot these data as in Part B.
+
+```{r}
+airqual_c <- airqual %>%
+  dplyr::select(-c("NMHC.GT."))
+
+airqual_c[airqual_c == -200] = NA
+
+#airqual_c <- imputeTS::na_mean(airqual_c, option = "mean")
+# rolling mean
+airqual_c <- imputeTS::na_ma(airqual_c, k = 4, weighting = "simple")
+airqual_c %>% 
+  pivot_longer(!timedate, names_to="Features", values_to="Measurement") %>%
+  ggplot(aes(x =  timedate, y = Measurement, col = Features)) + 
+  geom_line() + 
+  theme_minimal() +
+  facet_wrap(~ Features, scales = "free_y", ncol = 3)
+```
 
 ### Hints
 
@@ -127,18 +187,197 @@ Should probably be removed from the dataset.
 ## Part E: PCA of cleaned data
 
 -   Perform PCA on the data as prepared in D
+
+```{r}
+pca <- prcomp(airqual_c[,-1])
+```
+
 -   Create a screeplot and biplots for 1st/2nd, 2nd/3rd, 3rd/4th PC
+
+```{r}
+# screeplot
+pca <- prcomp(airqual_c[,-1])
+plot(pca, type = "l")
+```
+```{r}
+# biplots
+autoplot(pca, x=1,y=2, loadings=TRUE, loadings.label=TRUE)
+autoplot(pca, x=2,y=3, loadings=TRUE, loadings.label=TRUE)
+autoplot(pca, x=3,y=4, loadings=TRUE, loadings.label=TRUE)
+```
+
+
 -   Compute total variance explained by 1st, 1st and 2nd, 1st to 3rd, ... PCs
+
+```{r}
+#Variance explained
+summary(pca)$importance[3,]
+```
+
+
 -   Choose how many PCs to keep and transform data back to original sample space
+
+Keep to 0.99 mark, so PC1 to PC7
+
+```{r}
+t <- datetime
+x_1 <- pca$x[, 1:7] %*% t(pca$rotation[, 1:7])
+x_2 <- t(pca$center + pca$scale * t(x_1))
+```
+
+
 -   Plot the result against the cleaned data, compare and discuss
+
+```{r}
+data.frame(timedate = airqual_c$timedate, x_1) %>% 
+  pivot_longer(!timedate, names_to="Features", values_to="Measurement") %>%
+  ggplot(aes(x =  timedate, y = Measurement, col = Features)) + 
+  geom_line() + 
+  theme_minimal() +
+  facet_wrap(~ Features, scales = "free_y", ncol = 3)
+
+# data.frame(timedate = airqual_c$timedate, x_2) %>% 
+#   pivot_longer(!timedate, names_to="Features", values_to="Measurement") %>%
+#   ggplot(aes(x =  timedate, y = Measurement, col = Features)) + 
+#   geom_line() + 
+#   theme_minimal() +
+#   facet_wrap(~ Features, scales = "free_y", ncol = 3)
+
+airqual_c %>% 
+  pivot_longer(!timedate, names_to="Features", values_to="Measurement") %>%
+  ggplot(aes(x =  timedate, y = Measurement, col = Features)) + 
+  geom_line() + 
+  theme_minimal() +
+  facet_wrap(~ Features, scales = "free_y", ncol = 3)
+```
+
+Looks mostly the same, but deviates slightly as we removed all after PC7.
+
 -   Also plot the scores, zoom in to short time intervals and look at periodicity
+
+### Whole
+
+```{r}
+data.frame(timedate = airqual_c$timedate, pca$x[,1:7]) %>% 
+  pivot_longer(!timedate, names_to="Features", values_to="Scores") %>%
+  ggplot(aes(x =  timedate, y = Scores, col = Features)) + 
+  geom_line() + 
+  theme_minimal() +
+  facet_wrap(~ Features, scales = "free_y", ncol = 3)
+
+```
+### Zoomed
+```{r}
+data.frame(timedate = airqual_c$timedate[1:100], pca$x[1:100,1:7]) %>% 
+  pivot_longer(!timedate, names_to="Features", values_to="Scores") %>%
+  ggplot(aes(x =  timedate, y = Scores, col = Features)) + 
+  geom_line() + 
+  theme_minimal() +
+  facet_wrap(~ Features, scales = "free_y", ncol = 3)
+
+```
+
+
+
 -   Can you interpret certain PCs?
+
+```{r}
+autoplot(pca, x=1,y=2, loadings=TRUE, loadings.label=TRUE)
+data.frame(pca$rotation)
+
+melt(pca$rotation) %>%
+  ggplot(aes(Var2, Var1)) +
+  geom_tile(aes(fill = value)) +
+  geom_text(aes(fill = value, label = round(value, 3)))
+```
+
+By looking at the loadings of PC1 one can see that PT08.S5.O3 is the most important feature with respect to explainable variance.
+
+
+
+
 
 # Task 2: STL and correlation on weather data
 
 ## Part A: Data collection for a single station
 
 Based on material from the lectures, write an R function that can obtain a daily average temperature series for a meteorological station from the Norwegian Met Institute's Frost service. The function shall return a tsibble.
+
+```{r}
+.client_id <- str_trim(read_file("client_id.txt"))
+
+# Server to collect data from and resource we want from server
+server <- "frost.met.no"
+resource <- "observations/v0.jsonld"
+
+# Station(s) we want data for. SN17850 is the station ID for Ås (Blindern is SN18700)
+sources <- 'SN17850'
+
+# Type of data we want, P1D means daily data
+elements <- 'mean(air_temperature P1D)'
+
+# Time range we want data for
+reference_time <- '1874-01-01/2023-12-31'
+
+# Specify that we want mean temperature calculated from midnight to midnight
+timeoffsets <- 'PT0H'
+
+
+.query_url <- str_glue("https://{.client_id}@{server}/{resource}?sources={sources}&referencetime={reference_time}&elements={elements}&timeoffsets={timeoffsets}")
+
+#.stations_url = str_glue("https://{.client_id}@frost.met.no/sources/v0.jsonld")
+#raw_stations <- fromJSON(URLencode(.stations_url), flatten=TRUE)
+
+# COUNTYS = c(fylke1, fylke2, etc)   # replace with names of "fylker" you are interested in
+# 
+# stations <- unnest(raw_stations$data, cols='id') |>
+#   select(id, validFrom, country, county, municipality, name, masl, `@type`) |>
+#   mutate(validFrom=as.Date(validFrom)) |>
+#   filter(`@type` == "SensorSystem" & validFrom <= "1950-01-01" & country == "Norge" & county %in% COUNTYS)
+
+```
+
+```{r}
+# Set this to TRUE to generate a json file
+get_data_from_frost = FALSE
+weather_file = "weather_data_json.rds.bz2"
+if ( get_data_from_frost ) {
+  raw_data <- try(fromJSON(URLencode(.query_url), flatten=TRUE))
+  
+  if (class(raw_data) != 'try-error') {
+    print("Data retrieved from frost.met.no!")
+    write_rds(raw_data, weather_file, compress="bz2", text=TRUE)  # JSON represents data as text
+    print(str_glue("Raw data (JSON) written to '{weather_file}'"))
+  } else {
+    print("Error: the data retrieval was not successful!")
+  }
+} else {
+  raw_data <- read_rds(weather_file)
+  print(str_glue("Raw data (JSON) read from '{weather_file}'"))
+}
+```
+```{r}
+df <- unnest(raw_data$data, cols = c(observations))
+```
+
+```{r}
+head(df)
+```
+
+```{r}
+df |> dplyr::select(referenceTime, value) |>
+      mutate(referenceTime=as.Date(referenceTime)) |>
+      rename(Date=referenceTime, Temp=value) |> 
+      mutate(Year=year(Date), Week=week(Date),
+             Decade = as.factor(Year - Year %% 10)) |>
+      as_tibble() -> dc
+dc
+
+```
+
+
+
+
 
 ## Part B: Data preparation for a single station
 
