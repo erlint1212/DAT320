@@ -460,25 +460,131 @@ identical(timeseries_cleaner(dc), dc_cut_filled_imp_noLeap)
 
 ## Part C: Exploratory analysis for a single station
 
+
 -   Plot the temperature data as function of time
+
+```{r}
+dc %>%
+  ggplot(aes(Date, Temp)) +
+  geom_line()
+```
+
+
 -   Create density plots of original data and data with imputed values
+
+```{r}
+tsibble::fill_gaps(dc, .full = TRUE) %>%
+  imputeTS::na_ma(airqual_c, k = 4, weighting = "simple") %>%
+  ggplot(aes(Temp)) +
+  geom_histogram(aes(y = ..density..), fill = "white", color="black") +
+  stat_density(kernel = "gaussian", fill = NA, colour = "black") +
+  ggtitle("imputed values")
+
+dc %>%
+  ggplot(aes(Temp)) +
+  geom_histogram(aes(y = ..density..), fill = "white", color="black") +
+  stat_density(kernel = "gaussian", fill = NA, colour = "black") +
+  ggtitle("original data")
+```
+
+Temprature seems to be bimodal
+
 -   Turn the temperature data into a timeseries (ts) object
+
+```{r}
+ts_dc <- ts(dc) #tsibble::fill_gaps(dc, .full = TRUE)
+head(ts_dc)
+```
+
+
 -   Plot the autocorrelation function for lags up to 5.5 years; describe and discuss your observations
+
+```{r}
+acf(dc$Temp, lag.max = 365*5.5)
+```
+
+correlation between a time series and its own lagged version
+Clear pattern in regression error, can be fixed. Breaks the assumption of normally distributed errors.
+
 -   Also plot the ACF only for short lags, up to four weeks
+
+```{r}
+acf(dc$Temp, lag.max = 7*4)
+```
+
+
 -   Select some days distributed throughout the year and plot temperature as function of year for, e.g., 1 October, as a scatter plot. This plot can be useful to choose the seasonality window later (see Figs 7 and 8 in Cleveland et al, 1990)
+
+```{r}
+dc %>% 
+  dplyr::filter((month(Date) == 8 & day(Date) == 1)) %>%
+  ggplot(aes(Date, Temp)) +
+  geom_point() +
+  ylim(0, NA)
+```
+
 
 ## Part D: STL analysis
 
 -   Perform STL on the data. Explore different values for the seasonality and trend windows (remember that we want to look at trends over many years!), the choice between robust STL or not, and possibly the lowpass filter window. Describe your observations. It might be interesting to look at the ACF of the remainder in the STL result.
+
+```{r}
+summary(dc)
+```
+
+
+```{r}
+dc_c <- dc_cut_filled_imp_noLeap
+summary(dc_c)
+dc_stl <- stl(dc_c, s.window=10, na.action = na.exclude)
+autoplot(dc_stl)
+```
+
+
 -   Consult the original STL paper by Cleveland et al. (1990) for suggestions on how to choose STL parameters.
+
+```{r}
+
+```
+
+
 -   Based on your analysis, can you suggest a set of STL parameters to use for further work?
+
+```{r}
+
+```
+
+
 
 ## Part E: Multiple station analysis
 
 -   Obtain data from eight more stations. Two should be in the same part of Norway as the station from part A; then choose three stations each from two other parts of Norway. Data should cover several decades at least, so look for stations with long series.
+
+```{r}
+
+```
+
+
 -   Preprocess the data as described in Part B. Find the latest starting date of any series and create a multivariate time series with data from all nine stations starting at this date.
+
+```{r}
+
+```
+
+
 -   Obtain the cross-correlation matrix between the nine stations. Is there any structure in this 9x9 matrix?
+
+```{r}
+
+```
+
+
 -   Perform STL individually on each of the nine stations using the parameters from part D. Compare the resulting trends. Are all STL results of equal quality?
+
+```{r}
+
+```
+
 
 ### Hints
 
