@@ -541,7 +541,7 @@ Use loess to estimate sesonal and tred components
 
 ```{r}
 # Trend over years
-dc_c_ts <- ts(dc_cut_filled_imp_noLeap$Temp, frequency = 365) # Leap years removed, no need for 365.25
+dc_c_ts <- ts(dc_cut_filled_imp_noLeap$Temp, frequency = 365) #365 Leap years removed, no need for 365.25
 ```
 
 
@@ -585,25 +585,34 @@ autoplot(dc_stl)
 
 -   Consult the original STL paper by Cleveland et al. (1990) for suggestions on how to choose STL parameters.
 
+If you assume that the seasonal patter is constant through time, you should set `s.window` to a be a big odd number, so that you use your entire data to perform your analysis.
+If seasonal patterns evolve quickly, you should use a small number but bigger than 7 and odd, therby only using the most recent data such that the analysis is not affected by old seasonal pattern that are not relevant anymore.
+
 $n_{(s)}$ : the smoothing parameter for the seasonal component "must be carefully tailored to each application"(Cleveland et al. p.9, (1990)). In the `stl()` function those parameters are `s.window` and `s.degree`.
 
 Assume yearly periodicity with daily data, therefore `n_(p) = frequency = 365`
 
-""" \\
-STL has 6 parameters: \\
-$$n_{(p)} = \text{the number of observations} $$ \\
-"""
+`s.window` is the seasonal smoothing parameter
+
+*   "We will always take $n_{(s)}$ to be odd."(Cleveland et al. p.15, (1990))
+*   "we also want $n_{(s)}$ to be at least 7."(Cleveland et al. p.15, (1990))
+*   "The choice of appropriate variation depend critically on the characteristics of the series."
+
+diagnostic method:
+
+*   seasonal-diagnostic plot : "helps us decide how much of the variation in the data other than trend should go into the seasonal component and how much in the remainder"(Cleveland et al. p.15, (1990))
+
+"Without robustness, the seasonal component is distorted. This is illustrated by seasonal-diagnostic display"(Cleveland et al. p.15, (1990))
+
 
 *   s.window : Should be odd and at least 7, according to Cleveland et al. 
 *   s.degree : Should be zero or none
 *   t.window : span in lags of the loess window for trend extraction, should be odd.
+*   
 
 -   Based on your analysis, can you suggest a set of STL parameters to use for further work?
 
-```{r}
-
-```
-
+Since the data seems to be seasonally consistent over the years, I would recommend using a big odd number for `s.window` or just `periodic`
 
 
 ## Part E: Multiple station analysis
