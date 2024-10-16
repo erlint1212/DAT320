@@ -191,7 +191,7 @@ airqual_c %>%
 -   Perform PCA on the data as prepared in D
 
 ```{r}
-pca <- prcomp(airqual_c[,-1])
+pca <- prcomp(airqual_c[,-1]) #, center = TRUE, scale. = TRUE
 ```
 
 -   Create a screeplot and biplots for 1st/2nd, 2nd/3rd, 3rd/4th PC
@@ -208,6 +208,7 @@ autoplot(pca, x=2,y=3, loadings=TRUE, loadings.label=TRUE)
 autoplot(pca, x=3,y=4, loadings=TRUE, loadings.label=TRUE)
 ```
 
+Biplot red arrow original axis of data
 
 -   Compute total variance explained by 1st, 1st and 2nd, 1st to 3rd, ... PCs
 
@@ -227,6 +228,11 @@ x_1 <- pca$x[, 1:6] %*% t(pca$rotation[, 1:6])
 x_2 <- t(pca$center + pca$scale * t(x_1))
 ```
 
+$$ S = XL \Leftrightarrow SL^{-1} = XLL^{-1} \Leftrightarrow X = SL^{-1} = SL^{T}$$
+S : Scores
+L : Loadings
+X : Original matrix
+
 
 -   Plot the result against the cleaned data, compare and discuss
 
@@ -238,12 +244,12 @@ data.frame(timedate = airqual_c$timedate, x_1) %>%
   theme_minimal() +
   facet_wrap(~ Features, scales = "free_y", ncol = 3)
 
-# data.frame(timedate = airqual_c$timedate, x_2) %>% 
-#   pivot_longer(!timedate, names_to="Features", values_to="Measurement") %>%
-#   ggplot(aes(x =  timedate, y = Measurement, col = Features)) + 
-#   geom_line() + 
-#   theme_minimal() +
-#   facet_wrap(~ Features, scales = "free_y", ncol = 3)
+data.frame(timedate = airqual_c$timedate, x_2) %>%
+  pivot_longer(!timedate, names_to="Features", values_to="Measurement") %>%
+  ggplot(aes(x =  timedate, y = Measurement, col = Features)) +
+  geom_line() +
+  theme_minimal() +
+  facet_wrap(~ Features, scales = "free_y", ncol = 3)
 
 airqual_c %>% 
   pivot_longer(!timedate, names_to="Features", values_to="Measurement") %>%
@@ -294,6 +300,7 @@ melt(pca$rotation) %>%
 ```
 
 By looking at the loadings of PC1 one can see that PT08.S5.O3 is the most important feature with respect to explainable variance.
+Scores determine witch which weight each PC enter into each row of X
 
 
 
@@ -359,7 +366,7 @@ head(df)
 df |> dplyr::select(referenceTime, value) |>
       mutate(referenceTime=as.Date(referenceTime)) |>
       rename(Date=referenceTime, Temp=value) |> 
-      as_tsibble() -> dc
+      as_tsibble(index = Date) -> dc
 head(dc)
 ```
 
@@ -526,27 +533,70 @@ dc %>%
 
 ## Part D: STL analysis
 
+Sesonal Trend Residual
+Loess : local regression
+Use loess to estimate sesonal and tred components
+
 -   Perform STL on the data. Explore different values for the seasonality and trend windows (remember that we want to look at trends over many years!), the choice between robust STL or not, and possibly the lowpass filter window. Describe your observations. It might be interesting to look at the ACF of the remainder in the STL result.
 
 ```{r}
-summary(dc)
+# Trend over years
+dc_c_ts <- ts(dc_cut_filled_imp_noLeap$Temp, frequency = 365) # Leap years removed, no need for 365.25
 ```
 
 
 ```{r}
-dc_c <- dc_cut_filled_imp_noLeap
-summary(dc_c)
-dc_stl <- stl(dc_c, s.window=10, na.action = na.exclude)
+dc_stl <- stl(dc_c_ts, s.window=7, t.window=35, robust=TRUE)
+autoplot(dc_stl)
+```
+```{r}
+dc_stl <- stl(dc_c_ts, s.window=7, t.window=35, robust=FALSE)
 autoplot(dc_stl)
 ```
 
 
--   Consult the original STL paper by Cleveland et al. (1990) for suggestions on how to choose STL parameters.
+### Wide sesonality window
 
 ```{r}
-
+# STL wide seasonality window
+dc_stl <- stl(dc_c_ts, s.window="periodic", t.window=35, robust=TRUE)
+autoplot(dc_stl)
+```
+```{r}
+# STL wide seasonality window
+dc_stl <- stl(dc_c_ts, s.window="periodic", t.window=35, robust=FALSE)
+autoplot(dc_stl)
 ```
 
+### STL short seasonality window
+
+```{r}
+dc_stl <- stl(dc_c_ts, s.window=7, t.window=5, robust=TRUE)
+autoplot(dc_stl)
+```
+
+```{r}
+dc_stl <- stl(dc_c_ts, s.window=7, t.window=5, robust=FALSE)
+autoplot(dc_stl)
+```
+
+
+
+
+-   Consult the original STL paper by Cleveland et al. (1990) for suggestions on how to choose STL parameters.
+
+$n_{(s)}$ : the smoothing parameter for the seasonal component "must be carefully tailored to each application"(Cleveland et al. p.9, (1990)). In the `stl()` function those parameters are `s.window` and `s.degree`.
+
+Assume yearly periodicity with daily data, therefore `n_(p) = frequency = 365`
+
+""" \\
+STL has 6 parameters: \\
+$$n_{(p)} = \text{the number of observations} $$ \\
+"""
+
+*   s.window : Should be odd and at least 7, according to Cleveland et al. 
+*   s.degree : Should be zero or none
+*   t.window : span in lags of the loess window for trend extraction, should be odd.
 
 -   Based on your analysis, can you suggest a set of STL parameters to use for further work?
 
