@@ -337,7 +337,7 @@ timeoffsets <- 'PT0H'
 
 ```{r}
 # Set this to TRUE to generate a json file
-get_data_from_frost = FALSE
+get_data_from_frost = TRUE
 weather_file = "weather_data_json.rds.bz2"
 if ( get_data_from_frost ) {
   raw_data <- try(fromJSON(URLencode(.query_url), flatten=TRUE))
@@ -446,7 +446,7 @@ head(dc_cut_filled_imp_noLeap)
 timeseries_cleaner <- function(table) {
   gaps <- count_gaps(table)
   cutoff_date <-  as.character(tail(gaps[gaps$.n >= 31,], n=1)$.to)
-  dc_cut <- dc %>% tsibble::filter_index(cutoff_date ~ .) 
+  dc_cut <- table %>% tsibble::filter_index(cutoff_date ~ .) 
   dc_cut_filled_imp <- imputeTS::na_ma(dc_cut_filled, k = 4, weighting = "simple")
   dc_cut_filled_imp_noLeap <- dc_cut_filled_imp %>% 
     dplyr::filter(!(month(Date) == 2 & day(Date) == 29))
@@ -522,22 +522,42 @@ acf(dc$Temp, lag.max = 7*4)
 
 -   Select some days distributed throughout the year and plot temperature as function of year for, e.g., 1 October, as a scatter plot. This plot can be useful to choose the seasonality window later (see Figs 7 and 8 in Cleveland et al, 1990)
 
-```{r}
-dc %>% 
-  dplyr::filter((month(Date) == 8 & day(Date) == 1)) %>%
-  ggplot(aes(Date, Temp)) +
-  geom_point() +
-  ylim(0, NA)
+```{r fig.height=0}
+months <- c("Janaury", "Febrary")
+month_plot <- function(data, date) {
+  out_plot  <- data %>% 
+    dplyr::filter((month(Date) == date & day(Date) == 1)) %>%
+    ggplot(aes(Date, Temp)) +
+    geom_point() +
+    ylim(0, NA) +
+    ggtitle(c(month.name)[i])
+  
+  return(out_plot)
+}
+
+
+month_plots_list <- list()
+
+for (i in 1:12) {
+  month_plots_list[[i]] <- month_plot(dc_cut_filled_imp_noLeap, i)
+}
+  
+gridExtra::grid.arrange(grobs = month_plots_list, ncol = 3)
 ```
 
 
 ## Part D: STL analysis
 
-Sesonal Trend Residual
-Loess : local regression
-Use loess to estimate sesonal and tred components
+Sesonal Trend Residual, has inner and outer loop from loess using smoothing
+inner loop: updates tred and seasonality, use hyperparams to sepperate trend and seasonality, trend superposition seasonailty increase in curve
+outer loop: compute robustness weights, assesing the residuals.
+Loess : local regression, idea: for every data point, fit a polynominal to make a linear fit, qudaratic fit
+Iteratively improve fit assigning reducd weight to outliers.
+Use loess to estimate sesonal and tred components, and residuals
 
 -   Perform STL on the data. Explore different values for the seasonality and trend windows (remember that we want to look at trends over many years!), the choice between robust STL or not, and possibly the lowpass filter window. Describe your observations. It might be interesting to look at the ACF of the remainder in the STL result.
+
+If the autocorrelations are small and close to zero, it indicates that the remainders are uncorrelated (resemble white noice)
 
 ```{r}
 # Trend over years
@@ -550,9 +570,22 @@ dc_stl <- stl(dc_c_ts, s.window=7, t.window=35, robust=TRUE)
 autoplot(dc_stl)
 ```
 ```{r}
-dc_stl <- stl(dc_c_ts, s.window=7, t.window=35, robust=FALSE)
+# autocorrelation on remainders
+remainders <- dc_stl$time.series[, "remainder"]
+acf(remainders)
+```
+
+```{r}
+dc_stl <- stl(dc_c_ts, s.window=7, t.window=100, robust=FALSE)
 autoplot(dc_stl)
 ```
+```{r}
+# autocorrelation on remainders
+remainders <- dc_stl$time.series[, "remainder"]
+acf(remainders)
+```
+
+Having robust off seems to make greater remainders than without.
 
 
 ### Wide sesonality window
@@ -563,10 +596,22 @@ dc_stl <- stl(dc_c_ts, s.window="periodic", t.window=35, robust=TRUE)
 autoplot(dc_stl)
 ```
 ```{r}
+# autocorrelation on remainders
+remainders <- dc_stl$time.series[, "remainder"]
+acf(remainders)
+```
+```{r}
 # STL wide seasonality window
 dc_stl <- stl(dc_c_ts, s.window="periodic", t.window=35, robust=FALSE)
 autoplot(dc_stl)
 ```
+```{r}
+# autocorrelation on remainders
+remainders <- dc_stl$time.series[, "remainder"]
+acf(remainders)
+```
+
+
 
 ### STL short seasonality window
 
@@ -574,16 +619,28 @@ autoplot(dc_stl)
 dc_stl <- stl(dc_c_ts, s.window=7, t.window=5, robust=TRUE)
 autoplot(dc_stl)
 ```
+```{r}
+# autocorrelation on remainders
+remainders <- dc_stl$time.series[, "remainder"]
+acf(remainders)
+```
 
 ```{r}
 dc_stl <- stl(dc_c_ts, s.window=7, t.window=5, robust=FALSE)
 autoplot(dc_stl)
+```
+```{r}
+# autocorrelation on remainders
+remainders <- dc_stl$time.series[, "remainder"]
+acf(remainders)
 ```
 
 
 
 
 -   Consult the original STL paper by Cleveland et al. (1990) for suggestions on how to choose STL parameters.
+
+`s.window = "periodic"` means take all the data into account and wrap around , will make the seasonal component perioduc, aka amplitude will not scale over time. Do not use if the seasonality changes significantly over time.
 
 If you assume that the seasonal patter is constant through time, you should set `s.window` to a be a big odd number, so that you use your entire data to perform your analysis.
 If seasonal patterns evolve quickly, you should use a small number but bigger than 7 and odd, therby only using the most recent data such that the analysis is not affected by old seasonal pattern that are not relevant anymore.
@@ -620,51 +677,226 @@ Since the data seems to be seasonally consistent over the years, I would recomme
 -   Obtain data from eight more stations. Two should be in the same part of Norway as the station from part A; then choose three stations each from two other parts of Norway. Data should cover several decades at least, so look for stations with long series.
 
 ```{r}
-
+.stations_url = str_glue("https://{.client_id}@frost.met.no/sources/v0.jsonld")
+raw_stations <- fromJSON(URLencode(.stations_url), flatten=TRUE)
+df_stations <- data.frame(raw_stations)
 ```
+```{r}
+# 2 from Ås SN17850
+
+unique(df_stations[,"data.county"])
+```
+```{r}
+COUNTYS = c("AKERSHUS", "FINNMARK", "ROGALAND")   # replace with names of "fylker" you are interested in
+
+stations <- unnest(raw_stations$data, cols='id') |>
+  dplyr::select(id, validFrom, country, county, municipality, name, masl, `@type`) |>
+  mutate(validFrom=as.Date(validFrom)) |>
+  filter(`@type` == "SensorSystem" & validFrom <= "1950-01-01" & country == "Norge" & county %in% COUNTYS)
+```
+
+```{r}
+# 3 5
+cut_stations <- rbind(
+  stations[stations$county == "AKERSHUS",][1:2,],
+  stations[stations$county == "ROGALAND",][c(1, 6, 5),],
+  stations[stations$county == "FINNMARK",][1:3,]
+  )
+cut_stations
+```
+
+
 
 
 -   Preprocess the data as described in Part B. Find the latest starting date of any series and create a multivariate time series with data from all nine stations starting at this date.
 
-```{r}
 
+```{r}
+get_dc_from_frost <- function(sources) {
+  # Set this to TRUE to generate a json file
+  weather_file = paste(sources, "_weather_data_json.rds.bz2", sep="")
+  get_data_from_frost = !file.exists(file = weather_file)
+  
+  .query_url <- str_glue("https://{.client_id}@{server}/{resource}?sources={sources}&referencetime={reference_time}&elements={elements}&timeoffsets={timeoffsets}")
+  raw_data <- list()
+  
+  if ( get_data_from_frost ) {
+    raw_data <- try(fromJSON(URLencode(.query_url), flatten=TRUE))
+    
+    if (class(raw_data) != 'try-error') {
+      print("Data retrieved from frost.met.no!")
+      write_rds(raw_data, weather_file, compress="bz2", text=TRUE)  # JSON represents data as text
+      print(str_glue("Raw data (JSON) written to '{weather_file}'"))
+    } else {
+      print("Error: the data retrieval was not successful!")
+    }
+  } else {
+    raw_data <- read_rds(weather_file)
+    print(str_glue("Raw data (JSON) read from '{weather_file}'"))
+  }
+  
+  df <- unnest(raw_data$data, cols = c(observations))
+  
+  df |> dplyr::select(referenceTime, value) |>
+        mutate(referenceTime=as.Date(referenceTime)) |>
+        rename(Date=referenceTime, Temp=value) |> 
+        as_tsibble(index = Date) -> dc
+  
+  return(dc)
+}
 ```
 
+
+```{r}
+dc_stations <- timeseries_cleaner(get_dc_from_frost(as.character(cut_stations$id[1]))) %>%
+  rename(!!paste("Temp", cut_stations$name[1], sep=".") := "Temp")
+
+for (i in 2:8) {
+  dc_stations[paste("Temp", cut_stations$name[i], sep=".")] <- timeseries_cleaner(get_dc_from_frost(as.character(cut_stations$id[i])))$Temp
+}
+```
+
+```{r}
+head(dc_stations)
+identical(dc_stations$Temp.ASKER, dc_stations$Temp.ÅS)
+```
+
+
+
+
+```{r}
+station_list <- c()
+for (i in 1:8) {
+  station_list <- c(station_list, timeseries_cleaner(get_dc_from_frost(as.character(cut_stations$id[i]))))
+}
+```
+
+
+```{r}
+col2 <- timeseries_cleaner(get_dc_from_frost(as.character(cut_stations$id[2])))
+```
+
+```{r}
+col3 <- timeseries_cleaner(get_dc_from_frost(as.character(cut_stations$id[3])))
+```
+```{r}
+col4 <- timeseries_cleaner(get_dc_from_frost(as.character(cut_stations$id[4])))
+```
+```{r}
+col5 <- timeseries_cleaner(get_dc_from_frost(as.character(cut_stations$id[5])))
+```
+```{r}
+col6 <- timeseries_cleaner(get_dc_from_frost(as.character(cut_stations$id[6])))
+```
+```{r}
+col7 <- timeseries_cleaner(get_dc_from_frost(as.character(cut_stations$id[7])))
+```
+```{r}
+col8 <- timeseries_cleaner(get_dc_from_frost(as.character(cut_stations$id[8])))
+```
+```{r}
+start_date <- c(
+  dc_stations$Date[1],
+  col1$Date[1],
+  col2$Date[1],
+  col3$Date[1],
+  col4$Date[1],
+  col5$Date[1],
+  col6$Date[1],
+  col7$Date[1],
+  col8$Date[1]
+  )
+
+
+start_date
+max(start_date)
+```
+```{r}
+dc_stations[paste("Temp", cut_stations$name[2], sep=".")] <- col1$Temp
+head(dc_stations)
+```
 
 -   Obtain the cross-correlation matrix between the nine stations. Is there any structure in this 9x9 matrix?
 
 ```{r}
+head(dc_stations)
 
+dc_stations %>%
+  subset(select = -c(Date)) %>%
+  cor() %>%
+  data.frame()
 ```
 
 
 -   Perform STL individually on each of the nine stations using the parameters from part D. Compare the resulting trends. Are all STL results of equal quality?
 
 ```{r}
+p_list <- list() 
+for (colname in colnames(dc_stations)) {
+  dc_stl <- stl(ts(dc_stations[[colname]], frequency = 365), s.window=7, t.window=5, robust=TRUE)
+  pl <- autoplot(dc_stl) +
+    ggtitle(colname)
+  p_list[[colname]] <- pl
+}
 
 ```
-
-
-### Hints
-
-You can get a list of all available stations from Frost using
-
 ```{r}
-#.stations_url = str_glue("https://{.client_id}@frost.met.no/sources/v0.jsonld")
-#raw_stations <- fromJSON(URLencode(.stations_url), flatten=TRUE)
+p_list$Temp.ASKER
 ```
-
-To limit this to stations with actual data, starting at least as early as 1950, coming from only some parts of Norway relevant columns, and limiting to relevant columns, filter the raw data as
-
 ```{r}
-# COUNTYS = c(fylke1, fylke2, etc)   # replace with names of "fylker" you are interested in
-# 
-# stations <- unnest(raw_stations$data, cols='id') |>
-#   select(id, validFrom, country, county, municipality, name, masl, `@type`) |>
-#   mutate(validFrom=as.Date(validFrom)) |>
-#   filter(`@type` == "SensorSystem" & validFrom <= "1950-01-01" & country == "Norge" & county %in% COUNTYS)
+p_list$Temp.ÅS
 ```
+```{r}
+p_list$`Temp.STAVANGER - VÅLAND`
+```
+```{r}
+p_list$Temp.SAUDA
+```
+```{r}
+p_list$`Temp.OBRESTAD FYR`
+```
+```{r}
+p_list$Temp.KAUTOKEINO
+```
+```{r}
+p_list$`Temp.KIRKENES LUFTHAVN`
+```
+```{r}
+p_list$Temp.SIHCCAJAVRI
+```
+
 
 ## Part F (bonus): PCA
 
 -   Perform PCA on the multivariate time series.
+
+```{r}
+mts_pca <- dc_stations %>%
+  subset(select = -c(Date)) %>%
+  prcomp()
+```
+
+```{r}
+plot(mts_pca, type = "l")
+```
+
+
+```{r}
+data.frame(date = dc_stations$Date, mts_pca$x) %>% 
+  pivot_longer(!date, names_to="Features", values_to="Scores") %>%
+  ggplot(aes(x =  date, y = Scores, col = Features)) + 
+  geom_line() + 
+  theme_minimal() +
+  facet_wrap(~ Features, scales = "free_y", ncol = 3)
+```
+
+```{r}
+data.frame(date = dc_stations$Date[1:100], mts_pca$x[1:100,]) %>% 
+  pivot_longer(!date, names_to="Features", values_to="Scores") %>%
+  ggplot(aes(x =  date, y = Scores, col = Features)) + 
+  geom_line() + 
+  theme_minimal() +
+  facet_wrap(~ Features, scales = "free_y", ncol = 3)
+
+```
+
