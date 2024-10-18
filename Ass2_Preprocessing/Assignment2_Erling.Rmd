@@ -58,6 +58,23 @@ Contains the responses of a gas multisensor device deployed on the field in an I
 Multivariate (15) and time series
 Has missing values.
 
+The dataset has 15 columns:
+
+1. Date: Measurement date
+2. Time: Measurement time
+3. CO(GT): Carbon Monoxide concentration in ppm (ground truth)
+4. PT08.S1(CO): Sensor 1, Tin Oxide response related to CO
+5. NMHC(GT): Non-Methane Hydrocarbons concentration in micrograms/m³
+6. C6H6(GT): Benzene concentration in micrograms/m³
+7. PT08.S2(NMHC): Sensor 2, response related to Non-Methane Hydrocarbons
+8. NOx(GT): Nitrogen Oxides concentration in parts per billion (ground truth)
+9. PT08.S3(NOx): Sensor 3, response related to NOx
+10. NO2(GT): Nitrogen Dioxide concentration in parts per billion
+11. PT08.S4(NO2): Sensor 4, response related to NO2
+12. PT08.S5(O3): Sensor 5, response related to O3 (Ozone)
+13. T: Temperature in Celsius
+14. RH: Relative Humidity (%)
+15. AH: Absolute Humidity (g/m³)
 
 ### Hints
 
@@ -80,8 +97,8 @@ airqual %>%
     theme_minimal() +
   facet_wrap(~ Features, scales = "free_y", ncol = 3)
 ```
-There seems to be multiple -200 in all the numerical (integer and Categorical) data that seems to be outliers or missing values.
-Should probably be removed or imputed from the dataset.
+*There seems to be multiple -200 in all the numerical (integer and Categorical) data that seems to be outliers or missing values. Should probably be removed or imputed from the dataset.
+* NHMC.GT. has a lot of NA from early on, should probably remove
 
 ## Part C: PCA of data as is
 
@@ -116,12 +133,14 @@ pp + geom_label(aes(label = round(Explained, 2)))
 
 ### Biplots
 ```{r}
-biplot(pc, scale=0, col=c('blue', 'red'), xlabs=rep('*', nrow(pc$x[, 1:3])))
+autoplot(pc, x=1,y=2, loadings=TRUE, loadings.label=TRUE)
+autoplot(pc, x=2,y=3, loadings=TRUE, loadings.label=TRUE)
 ```
 
 * Can clearly see the -200 outliers
-* PRO8.S3.NOx positivly correlated between PC1 and PC2
+* PRO8.S3.NOx takes a lot from PC2 than PC1
 * NOX.GT. opposite
+
 -   Plot the scores for the PCs
 -   Comment on the results. Can you relate some features to your observations in part B?
 
@@ -129,8 +148,7 @@ biplot(pc, scale=0, col=c('blue', 'red'), xlabs=rep('*', nrow(pc$x[, 1:3])))
 
 ### Score plot
 ```{r}
-d_pc <- data.frame(Time=airqual[,1], pc$x[,1:3])
-head(d_pc)
+pairs(pc$x[,1:3], main = "PCA Score Plots", pch = 19)
 ```
 
 ### Hints
@@ -146,13 +164,50 @@ The website says that all -200 are NA
 
 -   Investigate to which degree missing values occur at the same time for multiple sensors
 ```{r}
-
+airqual_NA <- airqual
+airqual_NA[airqual_NA == -200] = NA
+missing_values <- colSums(is.na(airqual_NA)) %>% data.frame()
+perc_NA_airqal <- (missing_values/nrow(airqual_NA))*100
 ```
 
 
+```{r}
+missing_values
+```
+
+```{r}
+perc_NA_airqal 
+```
+
+
+
+```{r}
+airqual_NA <- airqual
+airqual_NA[airqual_NA == -200] = NA
+
+missing_values <- colSums(is.na(airqual_NA))
+print("Missing Values in Each Sensor:")
+print(missing_values)
+# 2. Investigate the degree of missing values
+
+# Visualizing the number of missing values over time
+
+# Create a data frame to visualize missing values
+missing_values <- airqual_NA %>%
+  mutate(Missing = rowSums(is.na(airqual_NA))) %>%
+  dplyr::select(timedate, Missing)
+
+ggplot(missing_values, aes(x = timedate, y = Missing)) +
+  geom_line(color = "red") +
+  labs(title = "Number of Missing Values Over Time", x = "DateTime", y = "Missing Values Count") +
+  theme_minimal()
+
+```
+
 -   Is one or are multiple sensors behaving peculiarly? How would you handle this?
 
-NHMC.GT has almost all missing values after a certain time, as seen in the visualizion, therfore remove to not skew the result away from real data.
+* NHMC.GT has almost all missing values after a certain time, as seen in the visualization, therefore remove to not skew the result away from real data.
+* For the rest use imputations as there seems to be no big gaps with NA
 
 -   Discuss options for handling missing values: (a) drop all time points containing any missing value, (b) impute values for missing values. In case of (b) choose a method for imputation. Justify your decisions.
 
@@ -168,9 +223,6 @@ airqual_c <- airqual %>%
 
 airqual_c[airqual_c == -200] = NA
 
-#airqual_c <- imputeTS::na_mean(airqual_c, option = "mean")
-# Missing Value Imputation by Weighted Moving Average, Simple moving average
-# Plain rolling average
 airqual_c <- imputeTS::na_ma(airqual_c, k = 4, weighting = "simple")
 
 airqual_c %>% 
@@ -181,10 +233,6 @@ airqual_c %>%
   facet_wrap(~ Features, scales = "free_y", ncol = 3)
 ```
 
-### Hints
-
--   Remember `imputeTS`
--   You can apply its functions to an entire dataframe, will be done column-wise
 
 ## Part E: PCA of cleaned data
 
@@ -242,21 +290,24 @@ data.frame(timedate = airqual_c$timedate, x_1) %>%
   ggplot(aes(x =  timedate, y = Measurement, col = Features)) + 
   geom_line() + 
   theme_minimal() +
-  facet_wrap(~ Features, scales = "free_y", ncol = 3)
+  facet_wrap(~ Features, scales = "free_y", ncol = 3) +
+  ggtitle("PCA without accounting for scaling")
 
 data.frame(timedate = airqual_c$timedate, x_2) %>%
   pivot_longer(!timedate, names_to="Features", values_to="Measurement") %>%
   ggplot(aes(x =  timedate, y = Measurement, col = Features)) +
   geom_line() +
   theme_minimal() +
-  facet_wrap(~ Features, scales = "free_y", ncol = 3)
+  facet_wrap(~ Features, scales = "free_y", ncol = 3) +
+  ggtitle("PCA accounting for scaling")
 
 airqual_c %>% 
   pivot_longer(!timedate, names_to="Features", values_to="Measurement") %>%
   ggplot(aes(x =  timedate, y = Measurement, col = Features)) + 
   geom_line() + 
   theme_minimal() +
-  facet_wrap(~ Features, scales = "free_y", ncol = 3)
+  facet_wrap(~ Features, scales = "free_y", ncol = 3) +
+  ggtitle("Original data")
 ```
 
 Looks mostly the same, but deviates slightly as we removed all after PC7.
@@ -522,14 +573,25 @@ head(ts_dc)
 acf(dc$Temp, lag.max = 365*5.5)
 ```
 
+* Can see clear seasonality in the plot with a time interval of about a year (365 days)
+* From eyeballing it seems that there is a positive correlation from jan to jul that decreases over time and a negative correlation that increases over time fron jul to dec
+* The correlation seems to be decreasing slightly over time, with the first months being perfectly near perfectly correlated and the last ones being ca 0.7
+
 correlation between a time series and its own lagged version
 Clear pattern in regression error, can be fixed. Breaks the assumption of normally distributed errors.
+
+Autocorrelation represents the degree of similarity between a given time series and a lagged version of itself over successive time intervals.
+
+Autocorrelation measures the relationship between a variable's current value and its past values.
+
+An autocorrelation of +1 represents a perfect positive correlation, while an autocorrelation of -1 represents a perfect negative correlation.
 
 -   Also plot the ACF only for short lags, up to four weeks
 
 ```{r}
 acf(dc$Temp, lag.max = 7*4)
 ```
+Hard to see pattern, decreasing correlation over time? (As 1 is perfect positive correlation)
 
 
 -   Select some days distributed throughout the year and plot temperature as function of year for, e.g., 1 October, as a scatter plot. This plot can be useful to choose the seasonality window later (see Figs 7 and 8 in Cleveland et al, 1990)
@@ -557,19 +619,20 @@ for (i in 1:12) {
 gridExtra::grid.arrange(grobs = month_plots_list, ncol = 3)
 ```
 
+In (Cleveland et al, fig .7 and .8 , 1990) it is shown that by plotting data points for specific days in a month every year you can visually inspect how good of a fit the loess model is to the different months, very useful for determining `s.window`
 
 ## Part D: STL analysis
 
-Sesonal Trend Residual, has inner and outer loop from loess using smoothing
-inner loop: updates tred and seasonality, use hyperparams to sepperate trend and seasonality, trend superposition seasonailty increase in curve
-outer loop: compute robustness weights, assesing the residuals.
-Loess : local regression, idea: for every data point, fit a polynominal to make a linear fit, qudaratic fit
-Iteratively improve fit assigning reducd weight to outliers.
-Use loess to estimate sesonal and tred components, and residuals
+Seasonal Trend Residual, has inner and outer loop from loess using smoothing
+inner loop: updates trend and seasonality, use hyperparams to sepperate trend and seasonality, trend superposition seasonality increase in curve
+outer loop: compute robustness weights, assessing the residuals.
+Loess : local regression, idea: for every data point, fit a polynomial to make a linear fit, quadratic fit
+Iteratively improve fit assigning reduced weight to outliers.
+Use loess to estimate seasonal and trend components, and residuals
 
--   Perform STL on the data. Explore different values for the seasonality and trend windows (remember that we want to look at trends over many years!), the choice between robust STL or not, and possibly the lowpass filter window. Describe your observations. It might be interesting to look at the ACF of the remainder in the STL result.
+-   Perform STL on the data. Explore different values for the seasonality and trend windows (remember that we want to look at trends over many years!), the choice between robust STL or not, and possibly the low pass filter window. Describe your observations. It might be interesting to look at the ACF of the remainder in the STL result.
 
-If the autocorrelations are small and close to zero, it indicates that the remainders are uncorrelated (resemble white noice)
+If the autocorrelation are small and close to zero, it indicates that the remainders are uncorrelated (resemble white noice)
 
 ```{r}
 # Trend over years
@@ -581,11 +644,17 @@ dc_c_ts <- ts(dc_cut_filled_imp_noLeap$Temp, frequency = 365) #365 Leap years re
 dc_stl <- stl(dc_c_ts, s.window=7, t.window=35, robust=TRUE)
 autoplot(dc_stl)
 ```
+Can clearly see the seasonal component in the data and its own plot, but the trend line seems more uncertain. Remainders seems to spike on every seasonal top and bottom.
+
 ```{r}
 # autocorrelation on remainders
 remainders <- dc_stl$time.series[, "remainder"]
-acf(remainders)
+acf(remainders, lag.max = 365*5)
+acf(remainders, lag.max = 7*4)
 ```
+
+From the autocorrelation it seems that there is a strong correlation on lower lags but smaller on larger.
+
 
 ```{r}
 dc_stl <- stl(dc_c_ts, s.window=7, t.window=100, robust=FALSE)
@@ -594,7 +663,8 @@ autoplot(dc_stl)
 ```{r}
 # autocorrelation on remainders
 remainders <- dc_stl$time.series[, "remainder"]
-acf(remainders)
+acf(remainders, lag.max = 365*5)
+acf(remainders, lag.max = 7*4)
 ```
 
 Having robust off seems to make greater remainders than without.
@@ -610,7 +680,8 @@ autoplot(dc_stl)
 ```{r}
 # autocorrelation on remainders
 remainders <- dc_stl$time.series[, "remainder"]
-acf(remainders)
+acf(remainders, lag.max = 365*5)
+acf(remainders, lag.max = 7*4)
 ```
 ```{r}
 # STL wide seasonality window
@@ -620,7 +691,8 @@ autoplot(dc_stl)
 ```{r}
 # autocorrelation on remainders
 remainders <- dc_stl$time.series[, "remainder"]
-acf(remainders)
+acf(remainders, lag.max = 365*5)
+acf(remainders, lag.max = 7*4)
 ```
 
 
@@ -634,7 +706,8 @@ autoplot(dc_stl)
 ```{r}
 # autocorrelation on remainders
 remainders <- dc_stl$time.series[, "remainder"]
-acf(remainders)
+acf(remainders, lag.max = 365*5)
+acf(remainders, lag.max = 7*4)
 ```
 
 ```{r}
@@ -644,7 +717,8 @@ autoplot(dc_stl)
 ```{r}
 # autocorrelation on remainders
 remainders <- dc_stl$time.series[, "remainder"]
-acf(remainders)
+acf(remainders, lag.max = 365*5)
+acf(remainders, lag.max = 7*4)
 ```
 
 
@@ -683,6 +757,7 @@ diagnostic method:
 
 Since the data seems to be seasonally consistent over the years, I would recommend using a big odd number for `s.window` or just `periodic`
 
+### Trend smoothing parameter $n_{(t)}$
 
 ## Part E: Multiple station analysis
 
@@ -807,13 +882,16 @@ dc_stations %>%
 ```{r}
 p_list <- list() 
 for (colname in colnames(dc_stations)) {
-  dc_stl <- stl(ts(dc_stations[[colname]], frequency = 365), s.window=7, t.window=5, robust=TRUE)
+  dc_stl <- stl(ts(dc_stations[[colname]], frequency = 365), s.window=41, t.window=5, robust=TRUE)
   pl <- autoplot(dc_stl) +
     ggtitle(colname)
   p_list[[colname]] <- pl
 }
 
 ```
+
+Trend line does not seems to change much over time, but that might be because the data starts from 2017
+
 ```{r}
 p_list$Temp.ASKER
 ```
