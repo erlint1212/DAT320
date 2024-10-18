@@ -388,13 +388,19 @@ head(gaps)
 -   Assume that gaps up to 31 days are acceptable. Find the earliest date in the time series such that all following data have no gaps longer than 31 days. Limit the time series to this.
 
 ```{r}
-cutoff_date <-  as.character(tail(gaps[gaps$.n >= 31,], n=1)$.to)
-cutoff_date
+# cutoff_date <-  as.character(tail(gaps[gaps$.n >= 31,], n=1)$.to)
+# cutoff_date
+if (nrow(gaps) != 0) {
+  cutoff_date <-  as.character(tail(gaps[gaps$.n >= 31,], n=1)$.to)
+  dc_cut <- dc %>% tsibble::filter_index(cutoff_date ~ .) 
+} else {
+  dc_cut <- dc
+}
 ```
 identify that all dates after, even if 31 is included, is 1988-06-17
 
 ```{r}
-dc_cut <- dc %>% tsibble::filter_index(cutoff_date ~ .) 
+# dc_cut <- dc %>% tsibble::filter_index(cutoff_date ~ .) 
 head(dc_cut)
 ```
 
@@ -445,13 +451,19 @@ head(dc_cut_filled_imp_noLeap)
 ```{r}
 timeseries_cleaner <- function(table) {
   gaps <- count_gaps(table)
-  cutoff_date <-  as.character(tail(gaps[gaps$.n >= 31,], n=1)$.to)
-  dc_cut <- table %>% tsibble::filter_index(cutoff_date ~ .) 
-  dc_cut_filled_imp <- imputeTS::na_ma(dc_cut_filled, k = 4, weighting = "simple")
-  dc_cut_filled_imp_noLeap <- dc_cut_filled_imp %>% 
+  gaps_31 <- gaps[gaps$.n >= 31,]
+  if (nrow(gaps_31) != 0) {
+    cutoff_date <-  as.character(tail(gaps_31, n=1)$.to)
+    table_cut <- table %>% tsibble::filter_index(cutoff_date ~ .)
+  } else {
+    table_cut <- table
+  }
+  table_cut_filled <- tsibble::fill_gaps(table_cut, .full = TRUE)
+  table_cut_filled_imp <- imputeTS::na_ma(table_cut_filled, k = 4, weighting = "simple")
+  table_cut_filled_imp_noLeap <- table_cut_filled_imp %>%
     dplyr::filter(!(month(Date) == 2 & day(Date) == 29))
-  
-  return(dc_cut_filled_imp_noLeap)
+
+  return(table_cut_filled_imp_noLeap)
 }
 ```
 
@@ -522,7 +534,7 @@ acf(dc$Temp, lag.max = 7*4)
 
 -   Select some days distributed throughout the year and plot temperature as function of year for, e.g., 1 October, as a scatter plot. This plot can be useful to choose the seasonality window later (see Figs 7 and 8 in Cleveland et al, 1990)
 
-```{r fig.height=0}
+```{r}
 months <- c("Janaury", "Febrary")
 month_plot <- function(data, date) {
   out_plot  <- data %>% 
@@ -712,12 +724,12 @@ cut_stations
 
 
 ```{r}
-get_dc_from_frost <- function(sources) {
+get_dc_from_frost <- function(src_id, cutoff_date_glob = NA) {
   # Set this to TRUE to generate a json file
-  weather_file = paste(sources, "_weather_data_json.rds.bz2", sep="")
+  weather_file = paste(src_id, "_weather_data_json.rds.bz2", sep="")
   get_data_from_frost = !file.exists(file = weather_file)
   
-  .query_url <- str_glue("https://{.client_id}@{server}/{resource}?sources={sources}&referencetime={reference_time}&elements={elements}&timeoffsets={timeoffsets}")
+  .query_url <- str_glue("https://{.client_id}@{server}/{resource}?sources={src_id}&referencetime={reference_time}&elements={elements}&timeoffsets={timeoffsets}")
   raw_data <- list()
   
   if ( get_data_from_frost ) {
@@ -742,79 +754,41 @@ get_dc_from_frost <- function(sources) {
         rename(Date=referenceTime, Temp=value) |> 
         as_tsibble(index = Date) -> dc
   
+  if (!is.na(cutoff_date_glob)) {
+    dc <- dc %>% tsibble::filter_index(cutoff_date_glob ~ .) #%>% as_tsibble(index = Date)
+  }
+  
   return(dc)
 }
 ```
-
-
-```{r}
-dc_stations <- timeseries_cleaner(get_dc_from_frost(as.character(cut_stations$id[1]))) %>%
-  rename(!!paste("Temp", cut_stations$name[1], sep=".") := "Temp")
-
-for (i in 2:8) {
-  dc_stations[paste("Temp", cut_stations$name[i], sep=".")] <- timeseries_cleaner(get_dc_from_frost(as.character(cut_stations$id[i])))$Temp
-}
-```
-
-```{r}
-head(dc_stations)
-identical(dc_stations$Temp.ASKER, dc_stations$Temp.ÅS)
-```
-
 
 
 
 ```{r}
 station_list <- c()
 for (i in 1:8) {
-  station_list <- c(station_list, timeseries_cleaner(get_dc_from_frost(as.character(cut_stations$id[i]))))
+  station_list <- c(station_list, as.character(timeseries_cleaner(get_dc_from_frost(as.character(cut_stations$id[i])))$Date[1]))
 }
 ```
 
 
 ```{r}
-col2 <- timeseries_cleaner(get_dc_from_frost(as.character(cut_stations$id[2])))
+station_list
+start_date_dc <- max(station_list)
+start_date_dc
 ```
+```{r}
+dc_stations <- timeseries_cleaner(get_dc_from_frost(as.character(cut_stations$id[1]), start_date_dc)) %>%
+  rename(!!paste("Temp", cut_stations$name[1], sep=".") := "Temp")
 
-```{r}
-col3 <- timeseries_cleaner(get_dc_from_frost(as.character(cut_stations$id[3])))
+for (i in 2:8) {
+  dc_stations[paste("Temp", cut_stations$name[i], sep=".")] <- timeseries_cleaner(get_dc_from_frost(as.character(cut_stations$id[i]), start_date_dc))$Temp
+}
 ```
 ```{r}
-col4 <- timeseries_cleaner(get_dc_from_frost(as.character(cut_stations$id[4])))
-```
-```{r}
-col5 <- timeseries_cleaner(get_dc_from_frost(as.character(cut_stations$id[5])))
-```
-```{r}
-col6 <- timeseries_cleaner(get_dc_from_frost(as.character(cut_stations$id[6])))
-```
-```{r}
-col7 <- timeseries_cleaner(get_dc_from_frost(as.character(cut_stations$id[7])))
-```
-```{r}
-col8 <- timeseries_cleaner(get_dc_from_frost(as.character(cut_stations$id[8])))
-```
-```{r}
-start_date <- c(
-  dc_stations$Date[1],
-  col1$Date[1],
-  col2$Date[1],
-  col3$Date[1],
-  col4$Date[1],
-  col5$Date[1],
-  col6$Date[1],
-  col7$Date[1],
-  col8$Date[1]
-  )
-
-
-start_date
-max(start_date)
-```
-```{r}
-dc_stations[paste("Temp", cut_stations$name[2], sep=".")] <- col1$Temp
 head(dc_stations)
 ```
+
 
 -   Obtain the cross-correlation matrix between the nine stations. Is there any structure in this 9x9 matrix?
 
