@@ -21,6 +21,7 @@ require("ggfortify")
 require("gridExtra")
 require("reshape2")
 
+library(ggcorrplot) # Easy cross-corrleation plots
 library(imputeTS)   # Time series missing value imputation
 
 library(jsonlite)   # handle JSON data returned by Frost
@@ -50,7 +51,7 @@ airqual <- airquality %>%
   relocate(timedate) %>%
   as_tibble()
 
-summary(airqual)
+summary(airqual) 
 head(airqual)
 ```
 
@@ -232,6 +233,9 @@ airqual_c %>%
   theme_minimal() +
   facet_wrap(~ Features, scales = "free_y", ncol = 3)
 ```
+
+Moving average: assumes that the current value ($y_{t}$) is dependent on the error terms including the current error, non linear regression model, order ACF
+Auto regressive: assumes that the current value ($y_{t}$) is dependent on previous values, linear regression model, order PACF
 
 
 ## Part E: PCA of cleaned data
@@ -557,12 +561,12 @@ dc %>%
   ggtitle("original data")
 ```
 
-Temprature seems to be bimodal
+Temperature seems to be bimodal
 
 -   Turn the temperature data into a timeseries (ts) object
 
 ```{r}
-ts_dc <- ts(dc) #tsibble::fill_gaps(dc, .full = TRUE)
+ts_dc <- ts(dc_cut_filled_imp_noLeap, frequency = 365) 
 head(ts_dc)
 ```
 
@@ -573,9 +577,12 @@ head(ts_dc)
 acf(dc$Temp, lag.max = 365*5.5)
 ```
 
+* How correlated each Tempratrure is to the temprature 5.5 years ago
 * Can see clear seasonality in the plot with a time interval of about a year (365 days)
 * From eyeballing it seems that there is a positive correlation from jan to jul that decreases over time and a negative correlation that increases over time fron jul to dec
 * The correlation seems to be decreasing slightly over time, with the first months being perfectly near perfectly correlated and the last ones being ca 0.7
+
+The autocorrelation analysis helps in detecting hidden patterns and seasonality and in checking for randomness
 
 correlation between a time series and its own lagged version
 Clear pattern in regression error, can be fixed. Breaks the assumption of normally distributed errors.
@@ -603,8 +610,8 @@ month_plot <- function(data, date) {
     dplyr::filter((month(Date) == date & day(Date) == 1)) %>%
     ggplot(aes(Date, Temp)) +
     geom_point() +
-    ylim(0, NA) +
-    ggtitle(c(month.name)[i])
+    ylim(-25, 25) +
+    ggtitle(month.name[i])
   
   return(out_plot)
 }
@@ -616,7 +623,8 @@ for (i in 1:12) {
   month_plots_list[[i]] <- month_plot(dc_cut_filled_imp_noLeap, i)
 }
   
-gridExtra::grid.arrange(grobs = month_plots_list, ncol = 3)
+gridExtra::grid.arrange(grobs = month_plots_list[1:6], ncol = 3)
+gridExtra::grid.arrange(grobs = month_plots_list[7:12], ncol = 3)
 ```
 
 In (Cleveland et al, fig .7 and .8 , 1990) it is shown that by plotting data points for specific days in a month every year you can visually inspect how good of a fit the loess model is to the different months, very useful for determining `s.window`
@@ -721,6 +729,8 @@ acf(remainders, lag.max = 365*5)
 acf(remainders, lag.max = 7*4)
 ```
 
+Shows very few siginficant spikes in autocorrelation, besides 1
+
 
 
 
@@ -763,6 +773,7 @@ Since the data seems to be seasonally consistent over the years, I would recomme
 
 -   Obtain data from eight more stations. Two should be in the same part of Norway as the station from part A; then choose three stations each from two other parts of Norway. Data should cover several decades at least, so look for stations with long series.
 
+
 ```{r}
 .stations_url = str_glue("https://{.client_id}@frost.met.no/sources/v0.jsonld")
 raw_stations <- fromJSON(URLencode(.stations_url), flatten=TRUE)
@@ -774,7 +785,7 @@ df_stations <- data.frame(raw_stations)
 unique(df_stations[,"data.county"])
 ```
 ```{r}
-COUNTYS = c("AKERSHUS", "FINNMARK", "ROGALAND")   # replace with names of "fylker" you are interested in
+COUNTYS = c("AKERSHUS", "FINNMARK", "TROMS")   # replace with names of "fylker" you are interested in
 
 stations <- unnest(raw_stations$data, cols='id') |>
   dplyr::select(id, validFrom, country, county, municipality, name, masl, `@type`) |>
@@ -783,11 +794,10 @@ stations <- unnest(raw_stations$data, cols='id') |>
 ```
 
 ```{r}
-# 3 5
 cut_stations <- rbind(
   stations[stations$county == "AKERSHUS",][1:2,],
-  stations[stations$county == "ROGALAND",][c(1, 6, 5),],
-  stations[stations$county == "FINNMARK",][1:3,]
+  stations[stations$county == "TROMS",][c(2,3,5),],
+  stations[stations$county == "FINNMARK",][c(1,2,4),]
   )
 cut_stations
 ```
@@ -816,6 +826,7 @@ get_dc_from_frost <- function(src_id, cutoff_date_glob = NA) {
       print(str_glue("Raw data (JSON) written to '{weather_file}'"))
     } else {
       print("Error: the data retrieval was not successful!")
+      stop()
     }
   } else {
     raw_data <- read_rds(weather_file)
@@ -830,7 +841,7 @@ get_dc_from_frost <- function(src_id, cutoff_date_glob = NA) {
         as_tsibble(index = Date) -> dc
   
   if (!is.na(cutoff_date_glob)) {
-    dc <- dc %>% tsibble::filter_index(cutoff_date_glob ~ .) #%>% as_tsibble(index = Date)
+    dc <- dc %>% tsibble::filter_index(cutoff_date_glob ~ .) 
   }
   
   return(dc)
@@ -868,21 +879,23 @@ head(dc_stations)
 -   Obtain the cross-correlation matrix between the nine stations. Is there any structure in this 9x9 matrix?
 
 ```{r}
-head(dc_stations)
-
 dc_stations %>%
   subset(select = -c(Date)) %>%
   cor() %>%
-  data.frame()
+  round(2) %>%
+  data.frame() %>%
+  ggcorrplot(type = "upper", lab = TRUE)
 ```
 
+* The temperatures that comes from the same fylke seems to be more correlated, and the closer the fylke is to each other the more correlated they are. 
+* Everything positively correlated
 
 -   Perform STL individually on each of the nine stations using the parameters from part D. Compare the resulting trends. Are all STL results of equal quality?
 
 ```{r}
 p_list <- list() 
 for (colname in colnames(dc_stations)) {
-  dc_stl <- stl(ts(dc_stations[[colname]], frequency = 365), s.window=41, t.window=5, robust=TRUE)
+  dc_stl <- stl(ts(dc_stations[[colname]], frequency = 365), s.window=41, t.window=11, robust=TRUE)
   pl <- autoplot(dc_stl) +
     ggtitle(colname)
   p_list[[colname]] <- pl
@@ -890,31 +903,32 @@ for (colname in colnames(dc_stations)) {
 
 ```
 
-Trend line does not seems to change much over time, but that might be because the data starts from 2017
+As the trend seems to be relatively flat in all examples, I can't see any significant difference in quality of the trend lines. Remainders seems to be between 10 and -10 in all the plots so the quality seems to be about the same in all plots. Except Kirekenes Lufthavn and Kautekeino where the remainder range seems to be between [10, -20], a significant deviant from the other plots.
+
 
 ```{r}
-p_list$Temp.ASKER
+p_list[[2]]
 ```
 ```{r}
-p_list$Temp.ÅS
+p_list[[3]]
 ```
 ```{r}
-p_list$`Temp.STAVANGER - VÅLAND`
+p_list[[4]]
 ```
 ```{r}
-p_list$Temp.SAUDA
+p_list[[5]]
 ```
 ```{r}
-p_list$`Temp.OBRESTAD FYR`
+p_list[[6]]
 ```
 ```{r}
-p_list$Temp.KAUTOKEINO
+p_list[[7]]
 ```
 ```{r}
-p_list$`Temp.KIRKENES LUFTHAVN`
+p_list[[8]]
 ```
 ```{r}
-p_list$Temp.SIHCCAJAVRI
+p_list[[9]]
 ```
 
 
@@ -925,12 +939,14 @@ p_list$Temp.SIHCCAJAVRI
 ```{r}
 mts_pca <- dc_stations %>%
   subset(select = -c(Date)) %>%
-  prcomp()
+  prcomp(center = TRUE)
 ```
 
 ```{r}
 plot(mts_pca, type = "l")
 ```
+
+Can clearly see that most the variance is captured in the first two PC
 
 
 ```{r}
@@ -943,12 +959,44 @@ data.frame(date = dc_stations$Date, mts_pca$x) %>%
 ```
 
 ```{r}
-data.frame(date = dc_stations$Date[1:100], mts_pca$x[1:100,]) %>% 
+data.frame(date = dc_stations$Date[1:600], mts_pca$x[1:600,]) %>% 
   pivot_longer(!date, names_to="Features", values_to="Scores") %>%
   ggplot(aes(x =  date, y = Scores, col = Features)) + 
   geom_line() + 
   theme_minimal() +
   facet_wrap(~ Features, scales = "free_y", ncol = 3)
 
+```
+
+```{r}
+t <- dc_stations$Date
+mts_x_1 <- mts_pca$x[, 1:2] %*% t(mts_pca$rotation[, 1:2])
+mts_x_2 <- t(mts_pca$center + mts_pca$scale * t(mts_x_1))
+```
+
+```{r}
+data.frame(Date = dc_stations$Date, mts_x_1) %>%
+  pivot_longer(!Date, names_to="Features", values_to="Measurement") %>%
+  ggplot(aes(x =  Date, y = Measurement, col = Features)) +
+  geom_line() +
+  theme_minimal() +
+  facet_wrap(~ Features, scales = "free_y", ncol = 3) +
+  ggtitle("mts_pca without accounting for scaling")
+
+data.frame(Date = dc_stations$Date, mts_x_2) %>%
+  pivot_longer(!Date, names_to="Features", values_to="Measurement") %>%
+  ggplot(aes(x =  Date, y = Measurement, col = Features)) +
+  geom_line() +
+  theme_minimal() +
+  facet_wrap(~ Features, scales = "free_y", ncol = 3) +
+  ggtitle("mts_pca accounting for scaling")
+
+dc_stations %>%
+  pivot_longer(!Date, names_to="Features", values_to="Measurement") %>%
+  ggplot(aes(x =  Date, y = Measurement, col = Features)) +
+  geom_line() +
+  theme_minimal() +
+  facet_wrap(~ Features, scales = "free_y", ncol = 3) +
+  ggtitle("Original data")
 ```
 
