@@ -1,4 +1,4 @@
-# DAT320
+# DAT320 - Sequential and Time Series Data Analysi
 
 `Ass1_Foundations/Ass1.rmd` and `Ass1_Foundations/Ass1.pdf` are the answer files
 

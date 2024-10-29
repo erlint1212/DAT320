@@ -1,0 +1,100 @@
+---
+title: "Assignment 3"
+author: "Group 4"
+date: "2024-10-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+```{r imports, results='hide', message=FALSE}
+options(contrasts = c("contr.sum", "contr.poly"))
+require("ggplot2")
+require("dplyr")
+require("ppcor")
+require("caret")
+require("tidyr")
+require("stringr")
+require("lubridate")
+require("tsibble")
+require("ggfortify")
+require("gridExtra")
+require("reshape2")
+
+library(ggcorrplot) # Easy cross-corrleation plots
+library(imputeTS)   # Time series missing value imputation
+
+library(jsonlite)   # handle JSON data returned by Frost
+library(tidyr)      # unpack data from JSON format
+library(tidyverse)  # data manipulation with mutate etc, string formatting
+library(lubridate)  # process date and time information
+library(tsibble)    # special tibbles for time series
+library(fpp3)       # autoplot() and gg_season() for time series
+library(readr)      # to read the Frost client ID from file
+```
+
+# Part 1
+
+## Task A
+
+Faults, adjusting clock summer (+02:00) time winter time (+01:00) 
+
+handle it by setting UTC as standard to transform to in the ymd_hms function.
+
+```{r}
+power_consum_raw <- read.table("data/consumption_per_group_aas_hour.csv", sep=";", dec=",", header= T)
+colnames(power_consum_raw)
+
+power_consum_df <- power_consum_raw  %>%
+  dplyr::select(c("STARTTID", "FORBRUKSGRUPPE", "VOLUM_KWH")) %>%
+  mutate(STARTTID = ymd_hms(STARTTID, tz = "UTC"))
+
+summary(power_consum_df) 
+head(power_consum_df)
+```
+
+```{r}
+power_consum_df_long <- power_consum_df %>% 
+  pivot_wider(names_from = FORBRUKSGRUPPE, values_from = VOLUM_KWH)
+
+data_range <- seq(min(power_consum_df_long$STARTTID), max(power_consum_df_long$STARTTID), by = "1 hour")
+
+last_date_gap <- tail(data_range[!data_range %in% power_consum_df_long$STARTTID], 1)
+
+power_consum_df_long_cut <- power_consum_df_long %>%
+  dplyr::filter(STARTTID >= last_date_gap)
+
+head(power_consum_df_long_cut)
+```
+
+```{r}
+head(power_consum_df_long_cut)
+tail(power_consum_df_long_cut)
+```
+
+
+```{r}
+# Mannualy remove the head and tail that don't sum to 1 whole day
+
+power_consum_df_long_cut_cutDay <- power_consum_df_long_cut %>%
+  dplyr::filter(STARTTID > ymd_hms("2021-04-30 23:00:00 UTC")) %>%
+  dplyr::filter(STARTTID < ymd_hms("2024-09-30 00:00:00 UTC"))
+head(power_consum_df_long_cut_cutDay)
+tail(power_consum_df_long_cut_cutDay, 24)
+```
+
+
+
+
+```{r}
+power_consum_sum_df <- power_consum_df_long_cut_cutDay %>%
+  mutate(STARTTID = as.Date(STARTTID)) %>%
+  group_by(STARTTID) %>%
+  summarise_each(funs(sum))
+
+head(power_consum_sum_df)
+```
+
+
