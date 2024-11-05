@@ -33,6 +33,8 @@ library(lubridate)  # process date and time information
 library(tsibble)    # special tibbles for time series
 library(fpp3)       # autoplot() and gg_season() for time series
 library(readr)      # to read the Frost client ID from file
+
+library(readxl)
 ```
 
 # Part 1
@@ -96,5 +98,120 @@ power_consum_sum_df <- power_consum_df_long_cut_cutDay %>%
 
 head(power_consum_sum_df)
 ```
+### Final clean
+
+```{r}
+power_consum_df_c <- power_consum_sum_df
+```
+
+
+## Task B
+
+Data is daily. 
+
+Data registered on different times, might skew results.
+
+In the excell file the dates are stored in this format '01/01/2020 22:10:00'
+
+Relevant years: 2017-2024:
+
+* 
+
+```{r}
+file_path <- "data"
+excel_files <- list.files(path = file_path, pattern = "*.xlsx", full.names = TRUE)
+```
+Data formats that might be problematic, some non unique dato. Leap years.
+FIles DATE formated differently, might cause issues if the read_excel function does not account for it.
+
+
+
+```{r}
+data_range <- seq(min(metro_aas_df$DATO), max(metro_aas_df$DATO), by = "1 day")
+
+metro_aas_df <- excel_files %>%
+  lapply(read_excel) %>%
+  bind_rows() %>%
+  dplyr::select(c("DATO","LT", "GLOB")) %>%
+  mutate(DATO = as.Date(DATO)) %>%
+  group_by(DATO) %>%
+  distinct(DATO, .keep_all = TRUE) %>%
+  ungroup() %>%
+  complete(DATO = seq(min(DATO), max(DATO), by = 'day')) # Add missing days
+
+summary(metro_aas_df)
+head(metro_aas_df)
+max(metro_aas_df$DATO)
+```
+
+
+### Missing data analysis
+
+```{r}
+metro_aas_df_c <- metro_aas_df
+```
+
+
+
+
+```{r}
+ggplot_na_distribution(metro_aas_df_c$LT)
+```
+
+```{r}
+ggplot_na_distribution(metro_aas_df_c$GLOB)
+```
+
+As seen in the previous graphs, there are very few missing values and they seem evenly spread out, therfore imputations seems to be a good choice to fill in the missing days.
+
+```{r}
+metro_aas_df_imputed <- imputeTS::na_ma(metro_aas_df_c , k = 4, weighting = "simple")
+head(metro_aas_df_imputed)
+```
+
+```{r}
+metro_aas_df_imputed %>%
+  ggplot(aes(DATO, LT)) +
+  geom_line()
+
+metro_aas_df_imputed %>%
+  ggplot(aes(DATO, GLOB)) +
+  geom_line()
+```
+### Final cleaned data
+
+```{r}
+metro_aas_df_c <- metro_aas_df_imputed
+```
+
+## Task C
+
+### Find the range of dates for each of the two data sets.
+
+```{r}
+power_consum_dateRange <- c(min(power_consum_df_c$STARTTID), max(power_consum_df_c$STARTTID))
+metro_ass_dateRange <- c(min(metro_aas_df_c$DATO), max(metro_aas_df_c$DATO))
+power_consum_dateRange
+metro_ass_dateRange
+```
+### For the longest contiguous range of dates present in both data sets, merge the two data sets based on date.
+
+```{r}
+merged_df <- dplyr::inner_join(power_consum_df_c, metro_aas_df_c, by = join_by(STARTTID == DATO)) %>%
+  rename(DATO = STARTTID)
+  
+head(merged_df)
+```
+
+### Remove data for leap days.
+
+```{r}
+merged_df_noLeap <- merged_df %>% 
+  dplyr::filter(!(month(DATO) == 2 & day(DATO) == 29))
+
+head(merged_df)
+```
+
+
 
 
