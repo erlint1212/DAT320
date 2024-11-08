@@ -1,0 +1,522 @@
+---
+title: "Assignment 3"
+author: "Group 4"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'data')
+knitr::opts_chunk$set(echo = TRUE)
+# Load necessary libraries
+library(tidyverse)
+library(readr)
+library(lubridate)
+library(readxl)
+library(imputeTS) # For time series imputation
+library(zoo) # for time series manipulation
+library(tseries)  # For stationarity tests
+library(forecast) # For ARIMA modeling and forecasting
+library(stlplus) # An enhanced version of STL
+library(lmtest) # For Granger test
+```
+
+
+# Part 1
+
+## Task A
+
+Faults, adjusting clock summer (+02:00) time winter time (+01:00) 
+
+handle it by setting UTC as standard to transform to in the ymd_hms function.
+
+```{r}
+power_consum_raw <- read.table("consumption_per_group_aas_hour.csv", sep=";", dec=",", header= T)
+colnames(power_consum_raw)
+
+power_consum_df <- power_consum_raw  %>%
+  dplyr::select(c("STARTTID", "FORBRUKSGRUPPE", "VOLUM_KWH")) %>%
+  mutate(STARTTID = ymd_hms(STARTTID, tz = "UTC"))
+
+summary(power_consum_df) 
+head(power_consum_df)
+```
+
+```{r}
+power_consum_df_long <- power_consum_df %>% 
+  pivot_wider(names_from = FORBRUKSGRUPPE, values_from = VOLUM_KWH)
+
+data_range <- seq(min(power_consum_df_long$STARTTID), max(power_consum_df_long$STARTTID), by = "1 hour")
+
+last_date_gap <- tail(data_range[!data_range %in% power_consum_df_long$STARTTID], 1)
+
+power_consum_df_long_cut <- power_consum_df_long %>%
+  dplyr::filter(STARTTID >= last_date_gap)
+
+head(power_consum_df_long_cut)
+```
+
+```{r}
+head(power_consum_df_long_cut)
+tail(power_consum_df_long_cut)
+```
+
+
+```{r}
+# Mannualy remove the head and tail that don't sum to 1 whole day
+
+power_consum_df_long_cut_cutDay <- power_consum_df_long_cut %>%
+  dplyr::filter(STARTTID > ymd_hms("2021-04-30 23:00:00 UTC")) %>%
+  dplyr::filter(STARTTID < ymd_hms("2024-09-30 00:00:00 UTC"))
+head(power_consum_df_long_cut_cutDay)
+tail(power_consum_df_long_cut_cutDay, 24)
+```
+
+
+
+
+```{r}
+power_consum_sum_df <- power_consum_df_long_cut_cutDay %>%
+  mutate(STARTTID = as.Date(STARTTID)) %>%
+  group_by(STARTTID) %>%
+  summarise_each(funs(sum))
+
+head(power_consum_sum_df)
+```
+### Final clean
+
+```{r}
+power_consum_df_c <- power_consum_sum_df
+```
+
+
+## Task B
+
+Data is daily. 
+
+Data registered on different times, might skew results.
+
+In the excell file the dates are stored in this format '01/01/2020 22:10:00'
+
+Relevant years: 2017-2024:
+
+* 
+
+```{r}
+file_path <- getwd()
+excel_files <- list.files(path = file_path, pattern = "*.xlsx", full.names = TRUE)
+```
+Data formats that might be problematic, some non unique dato. Leap years.
+FIles DATE formated differently, might cause issues if the read_excel function does not account for it.
+
+
+```{r}
+metro_aas_df <- excel_files %>%
+  lapply(read_excel) %>%
+  bind_rows() %>%
+  dplyr::select(c("DATO","LT", "GLOB")) %>%
+  mutate(DATO = as.Date(DATO)) %>%
+  group_by(DATO) %>%
+  distinct(DATO, .keep_all = TRUE) %>%
+  ungroup() %>%
+  complete(DATO = seq(min(DATO), max(DATO), by = 'day')) # Add missing days
+
+summary(metro_aas_df)
+head(metro_aas_df)
+max(metro_aas_df$DATO)
+```
+
+
+### Missing data analysis
+
+```{r}
+metro_aas_df_c <- metro_aas_df
+```
+
+
+
+
+```{r}
+ggplot_na_distribution(metro_aas_df_c$LT)
+```
+
+```{r}
+ggplot_na_distribution(metro_aas_df_c$GLOB)
+```
+
+As seen in the previous graphs, there are very few missing values and they seem evenly spread out, therfore imputations seems to be a good choice to fill in the missing days.
+
+```{r}
+metro_aas_df_imputed <- imputeTS::na_ma(metro_aas_df_c , k = 4, weighting = "simple")
+head(metro_aas_df_imputed)
+```
+
+```{r}
+metro_aas_df_imputed %>%
+  ggplot(aes(DATO, LT)) +
+  geom_line()
+
+metro_aas_df_imputed %>%
+  ggplot(aes(DATO, GLOB)) +
+  geom_line()
+```
+### Final cleaned data
+
+```{r}
+metro_aas_df_c <- metro_aas_df_imputed
+```
+
+## Task C
+
+### Find the range of dates for each of the two data sets.
+
+```{r}
+power_consum_dateRange <- c(min(power_consum_df_c$STARTTID), max(power_consum_df_c$STARTTID))
+metro_ass_dateRange <- c(min(metro_aas_df_c$DATO), max(metro_aas_df_c$DATO))
+power_consum_dateRange
+metro_ass_dateRange
+```
+### For the longest contiguous range of dates present in both data sets, merge the two data sets based on date.
+
+```{r}
+merged_df <- dplyr::inner_join(power_consum_df_c, metro_aas_df_c, by = join_by(STARTTID == DATO)) %>%
+  rename(DATO = STARTTID)
+  
+head(merged_df)
+```
+
+### Remove data for leap days.
+
+```{r}
+merged_df_noLeap <- merged_df %>% 
+  dplyr::filter(!(month(DATO) == 2 & day(DATO) == 29))
+
+head(merged_df_noLeap)
+
+merged_data <- merged_df_noLeap
+```
+
+## Part 2
+
+### Task D
+
+#### 1. Data Visualization
+
+Forretning, Industri, Privat are all VOLUME_KWH
+
+```{r data-visualization, fig.width=10, fig.height=6}
+# Plot raw data visualization
+merged_data %>%
+  pivot_longer(cols = c(Forretning, Industri, Privat, LT, GLOB), names_to = "Measurement", values_to = "Value") %>%
+  ggplot(aes(x = DATO, y = Value)) +
+  geom_line() +
+  facet_wrap(~Measurement, scales = "free_y") +
+  theme_bw() +
+  labs(title = "Raw Data Visualization", x = "Date", y = "Value") +
+  theme(legend.position = "bottom")
+```
+
+#### 2. Stationarity Tests
+
+```{r stationarity-tests}
+test_stationarity <- function(data, group_name) {
+  print(paste("Stationarity Test for", group_name))
+  # Handle NAs (Important: Use na.remove *inside* the function)
+  data <- na.remove(data)
+  adf.test(data) %>% print()  # Augmented Dickey-Fuller Test
+  kpss.test(data) %>% print()  # KPSS Test
+  cat("\n") # Newline for better output formatting
+}
+
+
+ts_Forr <- ts(merged_data$Forretning, frequency = 365)
+test_stationarity(ts_Forr, "Forretning KWH")
+
+ts_Indu <- ts(merged_data$Industri, frequency = 365)
+test_stationarity(ts_Forr, "Industri KWH")
+
+ts_Priv <- ts(merged_data$Forretning, frequency = 365)
+test_stationarity(ts_Priv, "Privat KWH")
+
+ts_temp <- ts(merged_data$LT, frequency = 365)
+test_stationarity(ts_temp, "Temperature (LT)")
+
+ts_glob <- ts(merged_data$GLOB, frequency = 365)
+test_stationarity(ts_glob, "Global Irradiation (GLOB)")
+```
+
+#### 3. Cross-Correlation Analysis
+
+```{r cross-correlation-analysis}
+cor_matrix <- cor(merged_data %>% select(where(is.numeric)), use = "pairwise.complete.obs")
+print(cor_matrix)
+
+numeric_cols <- names(merged_data)[sapply(merged_data, is.numeric) & names(merged_data) != "DATO"]
+
+for (i in 1:(length(numeric_cols) - 1)) {
+  for (j in (i + 1):length(numeric_cols)) {
+    ts1 <- ts(merged_data[[numeric_cols[i]]], frequency = 365)
+    ts2 <- ts(merged_data[[numeric_cols[j]]], frequency = 365)
+    ccf_result <- ccf(ts1, ts2, lag.max = 30, na.action = na.contiguous,
+                      main = paste("Cross-Correlation:", numeric_cols[i], "vs.", numeric_cols[j]))
+    plot(ccf_result)
+  }
+}
+```
+
+#### 4. Autocorrelation and Partial Autocorrelation Functions (ACF and PACF)
+
+```{r acf-pacf-consumption}
+ts_data <- ts(na.remove(merged_data), frequency = 365)
+
+acf(ts_data, lag.max = 14, main = paste("ACF(Short Term)"))
+
+pacf(ts_data, lag.max = 14, main = paste("PACF:(Short Term)"))
+
+acf(ts_data, lag.max = 365*2, main = paste("ACF:(Long Term)"))
+
+# Error: Singular matrix in qr_solve
+#pacf(ts_data, lag.max = 365*2, main = paste("PACF:(Long Term)"))
+
+# Similar structure for Temperature and Global Irradiation...
+```
+
+## Task E: Seasonal Differencing and ACF/PACF
+
+#### Seasonal Differencing of Consumption, Temperature, and Global Irradiation
+
+```{r seasonal-differencing}
+diff_consumption <- diff(ts_data, lag = 365)
+acf(diff_consumption, lag.max = 14, main = paste("ACF:(Seasonally Differenced, Short Term)"))
+pacf(diff_consumption, lag.max = 14, main = paste("PACF:(Seasonally Differenced, Short Term)"))
+
+# Repeat for Temperature and Global Irradiation...
+```
+
+## Task F: STL Decomposition Analysis
+
+```{r stl-decomposition}
+ts_consumption <- ts(na.remove(merged_data$Forretning), frequency = 365)
+stl_consumption <- stlplus(ts_consumption, period = 365, s.window = "periodic", t.window = 365, l.window = 30, robust = TRUE)
+plot(stl_consumption)
+
+# Remove seasonal component
+plot(ts_consumption - stl_consumption$data[, "seasonal"])
+
+# Repeat for Temperature and Global Irradiation...
+```
+
+## Task G: Granger Causality Test
+
+ 1. Hypotheses
+ 
+ * Null Hypothesis (H0):  x does NOT Granger-cause y Past values of x do not help in predicting y.
+ * Alternative Hypothesis (H1): x DOES Granger-cause y. Past values of x provide statistically significant information about the future values of y.
+  
+ 2. Test Procedure (using AR and VAR models)
+ 
+ a. Univariate Autoregression (AR) Model for y:
+   $$y_t = c + \phi_1 y_{t-1} + \phi_2 y_{t-2} + \dots + \phi_p y_{t-p} + \varepsilon_t$$
+   Model y only using its own past values (lags).
+   
+ b. Vector Autoregression (VAR) Model for x and y:
+   $$y_t = c + \phi_1 y_{t-1} + \dots + \phi_p y_{t-p} + \beta_1 x_{t-1} + \dots + \beta_p x_{t-p} + \varepsilon_t$$
+   Model y using both its own past values AND the past values of x.
+   
+ c. Comparison:
+   Use an F-test to compare the AR and VAR models.
+   If the VAR model (with x) significantly improves prediction of y compared
+   to the AR model (only y's history), reject the null hypothesis.  The improvement
+   in predictive ability is assessed by comparing residual sums of squares
+   between restricted (AR) and unrestricted (VAR) models.V
+
+```{r granger-causality-test-function}
+# Granger Causality test function
+granger_test <- function(y, x, group_name, var_name, maxlag = 5) {
+  # Align time series and handle potential NA/length issues:
+  # Find the maximum start date and minimum end date between the two time series
+  start_date <- max(start(y), start(x))
+  end_date <- min(end(y), end(x))
+  # If the time series do not overlap, skip the test and show a warning
+  if (start_date > end_date) {
+    warning(paste("No overlapping dates for", group_name, "and", var_name))
+    return(NULL)
+  }
+  # Window the time series to the overlapping date range
+  y <- window(y, start = start_date, end = end_date)
+  x <- window(x, start = start_date, end = end_date)
+  # CRITICAL CHECK: Ensure time series have enough observations after windowing.
+  # The Granger test needs at least 2 observations to perform the test.
+  if (length(na.remove(y)) <= 1 || length(na.remove(x)) <= 1) {
+    warning(paste("Time series too short for Granger test:", group_name, "or", var_name))
+    return(NULL)
+  }
+  # Combine the two time series into a data frame for the Granger test
+  combined_data <- data.frame(y = y, x = x)
+  # Display a message indicating the variables being tested
+  print(paste("Granger Causality Test:", var_name, "->", group_name))
+  # Perform the Granger Causality Test using the grangertest() function from the lmtest package
+  test_result <- tryCatch({
+    # Run the Granger Causality Test with a specified maximum lag (default is 5)
+    granger_result <- grangertest(y ~ x, order = maxlag, data = combined_data)
+    return(granger_result)
+  }, error = function(e) {
+    # If an error occurs (e.g., due to data issues), catch and display it
+    cat("Error in Granger test:", e, "\n")
+    return(NULL)
+  })
+  # Print the results of the Granger Causality test if successful
+  if (!is.null(test_result)) {
+    print(test_result)
+  } else {
+    # If no result, show a message indicating no result was generated
+    print(paste("No result for", var_name, "->", group_name))
+  }
+  # Return the test result (if any)
+  return(test_result)
+}
+```
+
+### Example: Granger Causality Test between LT and Temperature 
+```{r}
+# Extract the consumption data for the specific group (e.g., 'Privat')
+consumer_groups <- c("Privat", "Forretning", "Industri")
+for (group in consumer_groups) {
+  consumption_data <- merged_data[, group]
+  ts_consumption <- ts(na.remove(consumption_data), frequency = 365)  # Convert to time series with daily frequency
+  
+  # Extract temperature (LT) data, assuming it is available in merged_data
+  ts_temp <- ts(na.remove(merged_data$LT), frequency = 365)  # Convert to time series with daily frequency
+  
+  # Perform the Granger Causality test for Consumption vs Temperature
+  granger_result <- granger_test(ts_consumption, ts_temp, group, "Temperature (LT)")
+  
+  # Extract Global Irradiation (GLOB) data
+  ts_glob <- ts(na.remove(merged_data$GLOB), frequency = 365)
+  
+  # Perform the Granger Causality test for Consumption vs Global Irradiation
+  granger_result <- granger_test(ts_consumption, ts_glob, group, "Global Irradiation (GLOB)")
+  
+  # Perform the Granger Causality test for Temperature vs Global Irradiation
+  granger_result <- granger_test(ts_temp, ts_glob, group, "Temperature (LT)")
+}
+```
+
+## Task H: Forecasting with ARIMA Model
+
+### ARIMA Model Forecasting function
+
+```{r ARIMA1}
+arima_forecast <- function(time_series, max_order = 5, h = 10) {
+  # Ensure the time series is a univariate time series (vector)
+  if (is.null(time_series) || length(time_series) < 2) {
+    stop("Time series is too short for forecasting")
+  }
+  
+  # Check for missing data and handle it
+  time_series <- na.remove(time_series)  # Remove NA values from the series
+  
+  # Fit an ARIMA model with automatic order selection
+  # auto.arima function automatically selects the best ARIMA model based on AICc criterion
+  model <- auto.arima(time_series, max.p = max_order, max.q = max_order, seasonal = FALSE)
+  
+  # Display the selected ARIMA model
+  print(paste("Fitted ARIMA Model:", as.character(model)))
+  
+  # Forecast the next 'h' periods (e.g., 10 days)
+  forecast_result <- forecast(model, h = h)
+  
+  # Plot the forecasted values along with the historical data
+  plot(forecast_result)
+  title(main = paste("ARIMA Forecast for next", h, "periods"))
+  
+  # Return the forecast results (point forecast, lower and upper prediction intervals)
+  return(forecast_result)
+}
+```
+
+### Example: Forecasting Consumption for a Specific Group (Privat)
+```{r ARIMA2}
+# Let's forecast the consumption for the 'Privat' group over the next 10 periods
+# Extract consumption data for the 'Privat' group from the merged dataset
+consumption_data <- merged_data$Privat
+# Convert consumption data to a time series object, handling NAs
+ts_consumption <- ts(na.remove(consumption_data), frequency = 365)  # Daily frequency (365 days per year)
+# Apply ARIMA model forecasting for the next 10 periods (e.g., days or time units)
+forecast_result <- arima_forecast(ts_consumption, max_order = 5, h = 10)
+```
+
+### Example: Forecasting Temperature (LT)
+```{r Frecast_LT}
+# Now, let's forecast the temperature (LT) for the next 10 periods
+# Extract temperature data from merged dataset
+temperature_data <- merged_data$LT
+# Convert temperature data to a time series object
+ts_temperature <- ts(na.remove(temperature_data), frequency = 365)
+# Apply ARIMA model forecasting for the next 10 periods (e.g., days or time units)
+forecast_result_temp <- arima_forecast(ts_temperature, max_order = 5, h = 10)
+```
+
+### Example: Forecasting Global Irradiation (GLOB)
+```{r Forecast_GLOB}
+# Similarly, forecast Global Irradiation (GLOB) for the next 10 periods
+# Extract global irradiation data from merged dataset
+glob_data <- merged_data$GLOB
+# Convert global irradiation data to a time series object
+ts_glob <- ts(na.remove(glob_data), frequency = 365)
+# Apply ARIMA model forecasting for the next 10 periods (e.g., days or time units)
+forecast_result_glob <- arima_forecast(ts_glob, max_order = 5, h = 10)
+```
+
+
+### Task I: Evaluate Forecast Accuracy for ARIMA Model
+
+```{r Evaluate_forecast}
+# Evaluation function to calculate forecast accuracy
+evaluate_forecast_accuracy <- function(forecast_result, actual_data) {
+  # Ensure that both forecast and actual data are provided and have the same length
+  if (length(forecast_result$mean) != length(actual_data)) {
+    stop("The forecast and actual data must have the same length")
+  }
+  # Calculate accuracy measures: MAE, MSE, RMSE, MAPE, etc.
+  accuracy_measures <- accuracy(forecast_result, actual_data)
+  # Print out the accuracy measures
+  print("Accuracy Measures:")
+  print(accuracy_measures)
+  # Return the accuracy measures for further use
+  return(accuracy_measures)
+}
+```
+
+### Example 1: Evaluating Forecast Accuracy for Consumption (VOLUM_KWH)
+
+```{r}
+# Get the actual consumption data for the last 10 periods
+# Assuming that actual future consumption data is available for comparison
+actual_consumption <- merged_data$Privat[(length(merged_data$Privat)-9):length(merged_data$Privat)]
+# Compare with the forecasted consumption
+# Use the forecasted result from Task H
+forecast_accuracy_consumption <- evaluate_forecast_accuracy(forecast_result, actual_consumption)
+```
+
+### Example 2: Evaluating Forecast Accuracy for Temperature (LT)
+
+```{r}
+# Get the actual temperature data for the last 10 periods
+actual_temperature <- merged_data$LT[(length(merged_data$LT)-9):length(merged_data$LT)]
+# Compare with the forecasted temperature
+# Use the forecasted result from Task H
+forecast_accuracy_temperature <- evaluate_forecast_accuracy(forecast_result_temp, actual_temperature)
+```
+
+### Example 3: Evaluating Forecast Accuracy for Global Irradiation (GLOB)
+
+```{r}
+# Get the actual global irradiation data for the last 10 periods
+actual_glob <- merged_data$GLOB[(length(merged_data$GLOB)-9):length(merged_data$GLOB)]
+# Compare with the forecasted global irradiation
+# Use the forecasted result from Task H
+forecast_accuracy_glob <- evaluate_forecast_accuracy(forecast_result_glob, actual_glob)
+```
+
+
