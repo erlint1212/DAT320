@@ -19,6 +19,7 @@ library(tseries)  # For stationarity tests
 library(forecast) # For ARIMA modeling and forecasting
 library(stlplus) # An enhanced version of STL
 library(lmtest) # For Granger test
+library(reshape2) # For melt an correlation matrix
 ```
 
 
@@ -250,6 +251,13 @@ test_stationarity(ts_glob, "Global Irradiation (GLOB)")
 ```{r cross-correlation-analysis}
 cor_matrix <- cor(merged_data %>% select(where(is.numeric)), use = "pairwise.complete.obs")
 print(cor_matrix)
+melt(cor_matrix) %>%
+  ggplot(aes(Var2, Var1)) +
+  geom_tile(aes(fill = value)) +
+  geom_text(aes(fill = value, label = round(value, 3))) +
+  scale_fill_gradient2() +
+  labs(title = "Correlation Matrix", x = "", y = "") +
+  theme_minimal()
 
 numeric_cols <- names(merged_data)[sapply(merged_data, is.numeric) & names(merged_data) != "DATO"]
 
@@ -267,18 +275,23 @@ for (i in 1:(length(numeric_cols) - 1)) {
 #### 4. Autocorrelation and Partial Autocorrelation Functions (ACF and PACF)
 
 ```{r acf-pacf-consumption}
-ts_data <- ts(na.remove(merged_data), frequency = 365)
+acf_pacf_plot <- function(data) {
+  ts_data <- ts(na.remove(data), frequency = 365)
+  
+  acf(ts_data, lag.max = 14, main = paste("ACF:", deparse(substitute(data)) ,"(Short Term)"))
+  
+  pacf(ts_data, lag.max = 14, main = paste("PACF:", deparse(substitute(data)) ,"(Short Term)"))
+  
+  acf(ts_data, lag.max = 365*2, main = paste("ACF:", deparse(substitute(data)) ,"(Long Term)"))
+  
+  pacf(ts_data, lag.max = 365*2, main = paste("PACF:", deparse(substitute(data)) ,"(Long Term)"))
+}
 
-acf(ts_data, lag.max = 14, main = paste("ACF(Short Term)"))
-
-pacf(ts_data, lag.max = 14, main = paste("PACF:(Short Term)"))
-
-acf(ts_data, lag.max = 365*2, main = paste("ACF:(Long Term)"))
-
-# Error: Singular matrix in qr_solve
-#pacf(ts_data, lag.max = 365*2, main = paste("PACF:(Long Term)"))
-
-# Similar structure for Temperature and Global Irradiation...
+acf_pacf_plot(merged_data$Forretning)
+acf_pacf_plot(merged_data$Industri)
+acf_pacf_plot(merged_data$Privat)
+acf_pacf_plot(merged_data$LT)
+acf_pacf_plot(merged_data$GLOB)
 ```
 
 ## Task E: Seasonal Differencing and ACF/PACF
@@ -286,7 +299,9 @@ acf(ts_data, lag.max = 365*2, main = paste("ACF:(Long Term)"))
 #### Seasonal Differencing of Consumption, Temperature, and Global Irradiation
 
 ```{r seasonal-differencing}
+ts_data <- ts(na.remove(merged_data$Privat), frequency = 365)
 diff_consumption <- diff(ts_data, lag = 365)
+
 acf(diff_consumption, lag.max = 14, main = paste("ACF:(Seasonally Differenced, Short Term)"))
 pacf(diff_consumption, lag.max = 14, main = paste("PACF:(Seasonally Differenced, Short Term)"))
 
@@ -295,13 +310,132 @@ pacf(diff_consumption, lag.max = 14, main = paste("PACF:(Seasonally Differenced,
 
 ## Task F: STL Decomposition Analysis
 
+```{r}
+# Choose STL parameters
+stl_parameters <- list(s.window = "periodic",  # Seasonal window for yearly data
+t.window = 365,         # Trend window (yearly smoothing)
+l.window = 30,          # Low-frequency window (adjust as needed)
+robust = TRUE)         # Use robust STL (handles outliers better)
+ma_order <- 7 # Set the order for the moving average smoother (e.g., 7 for weekly smoothing).  You can adjust this based on the data. A larger order leads to more smoothing.
+```
+
+```{r}
+# --- Private Electricity Consumption ---
+consumption_data <- merged_data$Privat
+ts_consumption <- ts(na.remove(consumption_data), frequency = 365)
+# Perform STL decomposition
+stl_consumption <- stlplus(ts_consumption, period = 365,
+                           s.window = stl_parameters$s.window,
+                           t.window = stl_parameters$t.window,
+                           l.window = stl_parameters$l.window,
+                           robust = stl_parameters$robust)
+# Smooth the trend-cycle (AFTER STL) using a moving average
+smoothed_trendcycle <- ma(stl_consumption$data[, "trend"], order = ma_order) # Using moving average.
+# Extract components
+seasonal_consumption <- stl_consumption$data[, "seasonal"] # Seasonal component (periodic fluctuations)
+remainder_consumption <- stl_consumption$data[, "remainder"]  # Remainder component (noise or error)
+trendcycle_consumption <- stl_consumption$data[, "trend"]
+if ("cycle" %in% colnames(stl_consumption$data)) {
+  trendcycle_consumption <- trendcycle_consumption + stl_consumption$data[, "cycle"]
+}
+deseasoned_consumption <- ts_consumption - seasonal_consumption  # Deseasonalized data
+# Plot components
+plot(ts_consumption, main = "Private Electricity Consumption") # Original
+plot(seasonal_consumption, main = "Seasonal Component")      # Seasonal
+plot(deseasoned_consumption, main = "Deseasoned Consumption")  # Deseasoned
+plot(smoothed_trendcycle, main = "Smoothed Trend-Cycle")    # Smoothed trend-cycle
+plot(remainder_consumption, main = "Remainder")           # Remainder
+```
+```{r}
+# --- Global Irradiation ---
+ts_glob <- ts(na.remove(merged_data$GLOB), frequency = 365)
+# Perform STL Decomposition
+stl_glob <- stlplus(ts_glob, period = 365,
+                    s.window = stl_parameters$s.window,
+                    t.window = stl_parameters$t.window,
+                    l.window = stl_parameters$l.window,
+                    robust = stl_parameters$robust)
+# Smooth the trend-cycle (using moving average, same order)
+smoothed_trendcycle_glob <- ma(stl_glob$data[, "trend"], order = ma_order)
+# Extract components (same approach as consumption)
+seasonal_glob <- stl_glob$data[, "seasonal"]
+deseasoned_glob <- ts_glob - seasonal_glob
+trendcycle_glob <- stl_glob$data[, "trend"]
+if ("cycle" %in% colnames(stl_glob$data)) {
+  trendcycle_glob <- trendcycle_glob + stl_glob$data[, "cycle"]
+}
+remainder_glob <- stl_glob$data[, "remainder"]
+#Plot components
+plot(ts_glob, main = "Global Irradiation")
+plot(seasonal_glob, main = "Seasonal Component")
+plot(deseasoned_glob, main = "Deseasoned Irradiation")
+plot(smoothed_trendcycle_glob, main = "Smoothed Trend-Cycle") # Plot smoothed trend
+plot(remainder_glob, main = "Remainder")
+```
+
+```{r}
+# --- Global Irradiation ---
+ts_glob <- ts(na.remove(merged_data$GLOB), frequency = 365)
+# Perform STL Decomposition
+stl_glob <- stlplus(ts_glob, period = 365,
+                    s.window = stl_parameters$s.window,
+                    t.window = stl_parameters$t.window,
+                    l.window = stl_parameters$l.window,
+                    robust = stl_parameters$robust)
+# Smooth the trend-cycle (using moving average, same order)
+smoothed_trendcycle_glob <- ma(stl_glob$data[, "trend"], order = ma_order)
+# Extract components (same approach as consumption)
+seasonal_glob <- stl_glob$data[, "seasonal"]
+deseasoned_glob <- ts_glob - seasonal_glob
+trendcycle_glob <- stl_glob$data[, "trend"]
+if ("cycle" %in% colnames(stl_glob$data)) {
+  trendcycle_glob <- trendcycle_glob + stl_glob$data[, "cycle"]
+}
+remainder_glob <- stl_glob$data[, "remainder"]
+#Plot components
+plot(ts_glob, main = "Global Irradiation")
+plot(seasonal_glob, main = "Seasonal Component")
+plot(deseasoned_glob, main = "Deseasoned Irradiation")
+plot(smoothed_trendcycle_glob, main = "Smoothed Trend-Cycle") # Plot smoothed trend
+plot(remainder_glob, main = "Remainder")
+```
+```{r}
+# --- Air Temperature ---
+# ... (same structure as Global Irradiation) ...
+ts_temp <- ts(na.remove(merged_data$LT), frequency = 365)
+# Perform STL Decomposition
+stl_temp <- stlplus(ts_temp, period = 365,
+                    s.window = stl_parameters$s.window,
+                    t.window = stl_parameters$t.window,
+                    l.window = stl_parameters$l.window,
+                    robust = stl_parameters$robust)
+# Smooth the trend-cycle (using moving average, same order as others)
+smoothed_trendcycle_temp <- ma(stl_temp$data[, "trend"], order = ma_order)
+seasonal_temp <- stl_temp$data[, "seasonal"]
+deseasoned_temp <- ts_temp - seasonal_temp
+trendcycle_temp <- stl_temp$data[, "trend"]
+if ("cycle" %in% colnames(stl_temp$data)) {
+  trendcycle_temp <- trendcycle_temp + stl_temp$data[, "cycle"]
+}
+remainder_temp <- stl_temp$data[, "remainder"]
+plot(ts_temp, main = "Air Temperature")
+plot(seasonal_temp, main = "Seasonal Component")
+plot(deseasoned_temp, main = "Deseasoned Temperature")
+plot(smoothed_trendcycle_temp, main = "Smoothed Trend-Cycle") # Plot smoothed trend
+plot(remainder_temp, main = "Remainder")
+```
+
+
+
+
+
 ```{r stl-decomposition}
 ts_consumption <- ts(na.remove(merged_data$Forretning), frequency = 365)
 stl_consumption <- stlplus(ts_consumption, period = 365, s.window = "periodic", t.window = 365, l.window = 30, robust = TRUE)
 plot(stl_consumption)
 
 # Remove seasonal component
-plot(ts_consumption - stl_consumption$data[, "seasonal"])
+autoplot(ts_consumption - stl_consumption$data[, "seasonal"])
 
 # Repeat for Temperature and Global Irradiation...
 ```
